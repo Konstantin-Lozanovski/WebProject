@@ -1,0 +1,28 @@
+services:
+  mongo:
+    image: mongo:7
+    volumes:
+      - mongo-data:/data/db
+
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      # "mongo" is the service name above; Docker resolves it to that container
+      - MONGO_URI=mongodb://mongo:27017/pickup-games
+    depends_on:
+      - mongo
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - API_PROXY_TARGET=http://backend:5000
+    depends_on:
+      - backend
+
+# A named volume keeps the database data when the containers are removed
+volumes:
+  mongo-data:
