@@ -52,7 +52,11 @@ const App = () => {
       <div className="d-flex flex-column min-vh-100">
         <Navigation user={user} onLogout={handleLogout} />
         <main className="container flex-grow-1 py-4">
-          <AppRoutes user={user} onLogin={handleLogin} />
+          <AppRoutes
+            user={user}
+            onLogin={handleLogin}
+            onLogout={handleLogout}
+          />
         </main>
         <Footer />
       </div>

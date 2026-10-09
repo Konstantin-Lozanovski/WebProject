@@ -28,3 +28,14 @@ export const fetchCurrentUser = async () => {
   const response = await axiosInstance.get("/auth/me");
   return new User(response.data.user);
 };
+
+// DELETE /api/db
+export const deleteAllData = async () => {
+  await axiosInstance.delete("/db");
+};
+
+// POST /api/db/seed
+export const seedInitialData = async () => {
+  const response = await axiosInstance.post("/db/seed");
+  return response.data;
+};

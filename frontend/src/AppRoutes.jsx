@@ -2,11 +2,12 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
+import Database from "./pages/Database.jsx";
 import NotFound from "./pages/NotFound.jsx";
 
 // All client-side routes live in this module, apart from the main app module.
 // Each new screen gets one more Route here.
-const AppRoutes = ({ user, onLogin }) => {
+const AppRoutes = ({ user, onLogin, onLogout }) => {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
@@ -21,6 +22,8 @@ const AppRoutes = ({ user, onLogin }) => {
           user ? <Navigate to="/" replace /> : <Register onLogin={onLogin} />
         }
       />
+      {/* Open to everyone: after "delete all" there is no admin to log in as */}
+      <Route path="/db" element={<Database onLogout={onLogout} />} />
       {/* "*" catches every address that no other route matched */}
       <Route path="*" element={<NotFound />} />
     </Routes>
