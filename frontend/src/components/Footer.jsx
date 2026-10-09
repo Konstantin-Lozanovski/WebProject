@@ -1,10 +1,9 @@
 const Footer = () => {
   return (
-    <footer className="bg-dark text-white text-center py-3 mt-auto">
-      <div className="container">
-        <small>
-          Pickup Game Organizer · course project · weather data by Open-Meteo
-        </small>
+    <footer className="footer py-3 mt-auto">
+      <div className="container d-flex flex-wrap justify-content-between gap-2">
+        <span>Pickup Game Organizer</span>
+        <span>Weather data by Open-Meteo</span>
       </div>
     </footer>
   );

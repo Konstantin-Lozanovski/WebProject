@@ -69,72 +69,74 @@ const Register = ({ onLogin }) => {
   };
 
   return (
-    <div className="row justify-content-center">
-      <div className="col-12 col-sm-10 col-md-7 col-lg-5">
-        <h1 className="h2 mb-4">Register</h1>
+    <div className="container py-4">
+      <div className="row justify-content-center">
+        <div className="col-12 col-sm-10 col-md-7 col-lg-5">
+          <h1 className="h2 mb-4">Register</h1>
 
-        {/* noValidate turns off the browser's own popups, so our messages show */}
-        <form className="card card-body" onSubmit={handleSubmit} noValidate>
-          {formError && <div className="alert alert-danger">{formError}</div>}
+          {/* noValidate turns off the browser's own popups, so our messages show */}
+          <form className="card card-body" onSubmit={handleSubmit} noValidate>
+            {formError && <div className="alert alert-danger">{formError}</div>}
 
-          <div className="mb-3">
-            <label className="form-label" htmlFor="username">
-              Username
-            </label>
-            <input
-              className={`form-control ${fieldErrors.username ? "is-invalid" : ""}`}
-              type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
-            <div className="invalid-feedback">{fieldErrors.username}</div>
-            <div className="form-text">
-              3 to 20 letters, digits or underscores.
+            <div className="mb-3">
+              <label className="form-label" htmlFor="username">
+                Username
+              </label>
+              <input
+                className={`form-control ${fieldErrors.username ? "is-invalid" : ""}`}
+                type="text"
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+              <div className="invalid-feedback">{fieldErrors.username}</div>
+              <div className="form-text">
+                3 to 20 letters, digits or underscores.
+              </div>
             </div>
-          </div>
-          <div className="mb-3">
-            <label className="form-label" htmlFor="email">
-              Email
-            </label>
-            <input
-              className={`form-control ${fieldErrors.email ? "is-invalid" : ""}`}
-              type="email"
-              id="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <div className="invalid-feedback">{fieldErrors.email}</div>
-          </div>
-          <div className="mb-3">
-            <label className="form-label" htmlFor="password">
-              Password
-            </label>
-            <input
-              className={`form-control ${fieldErrors.password ? "is-invalid" : ""}`}
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <div className="invalid-feedback">{fieldErrors.password}</div>
-            <div className="form-text">
-              At least 8 characters, with at least one letter and one digit.
+            <div className="mb-3">
+              <label className="form-label" htmlFor="email">
+                Email
+              </label>
+              <input
+                className={`form-control ${fieldErrors.email ? "is-invalid" : ""}`}
+                type="email"
+                id="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <div className="invalid-feedback">{fieldErrors.email}</div>
             </div>
-          </div>
-          <button
-            className="btn btn-primary w-100"
-            type="submit"
-            disabled={submitting}
-          >
-            Register
-          </button>
-        </form>
+            <div className="mb-3">
+              <label className="form-label" htmlFor="password">
+                Password
+              </label>
+              <input
+                className={`form-control ${fieldErrors.password ? "is-invalid" : ""}`}
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <div className="invalid-feedback">{fieldErrors.password}</div>
+              <div className="form-text">
+                At least 8 characters, with at least one letter and one digit.
+              </div>
+            </div>
+            <button
+              className="btn btn-primary w-100"
+              type="submit"
+              disabled={submitting}
+            >
+              Register
+            </button>
+          </form>
 
-        <p className="text-center mt-3">
-          Already have an account? <Link to="/login">Log in</Link>
-        </p>
+          <p className="text-center mt-3">
+            Already have an account? <Link to="/login">Log in</Link>
+          </p>
+        </div>
       </div>
     </div>
   );

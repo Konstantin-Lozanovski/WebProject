@@ -1,0 +1,337 @@
+/*
+  The look of the whole app. It is loaded after Bootstrap and mostly changes
+  Bootstrap's own colour variables, so the components keep their Bootstrap
+  classes and only the Home page needs a few classes of our own.
+*/
+
+/* ---------- Palette ---------- */
+:root {
+  --page: #e3e8ed;
+  --surface: #ffffff;
+  --tint: #f4f6f8;
+  --ink: #26323d;
+  --muted: #63707d;
+  --line: #c3ccd6;
+  --accent: #4f6f8c;
+  --accent-dark: #3f5a73;
+  --open: #3f7462;
+  --few: #a56f2c;
+  --danger: #a94a4a;
+  --danger-dark: #8e3c3c;
+  --shadow: 0 1px 2px rgba(38, 50, 61, 0.08), 0 3px 10px rgba(38, 50, 61, 0.1);
+
+  /* Bootstrap reads these, so badges, links, borders and muted text follow the palette */
+  --bs-body-bg: #e3e8ed;
+  --bs-body-color: #26323d;
+  --bs-secondary-color: #63707d;
+  --bs-border-color: #c3ccd6;
+  --bs-border-radius: 6px;
+  --bs-link-color: #4f6f8c;
+  --bs-link-color-rgb: 79, 111, 140;
+  --bs-link-hover-color-rgb: 63, 90, 115;
+  --bs-primary-rgb: 79, 111, 140;
+  --bs-success-rgb: 63, 116, 98;
+  --bs-warning-rgb: 230, 200, 143;
+  --bs-danger-rgb: 169, 74, 74;
+  --bs-secondary-rgb: 99, 112, 125;
+  --bs-dark-rgb: 44, 58, 72;
+  --bs-light-rgb: 244, 246, 248;
+}
+
+h1,
+h2 {
+  font-weight: 600;
+}
+
+/* ---------- Navigation and footer ---------- */
+.topbar {
+  background: var(--accent);
+  --bs-navbar-color: #d2dde7;
+  --bs-navbar-hover-color: #ffffff;
+  --bs-navbar-active-color: #ffffff;
+  --bs-navbar-brand-font-size: 1.05rem;
+}
+
+.topbar .navbar-brand {
+  font-weight: 600;
+}
+
+.topbar .nav-link {
+  font-size: 0.92rem;
+}
+
+.topbar .nav-link.active {
+  font-weight: 600;
+}
+
+.footer {
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* ---------- Search band on the Home page ---------- */
+/* Same blue as the navigation, so the two read as one block; the thin line keeps them apart */
+.band {
+  background: var(--accent);
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  padding: 2rem 0;
+}
+
+.band .form-label {
+  color: #d2dde7;
+}
+
+.band .form-select,
+.band .form-control {
+  border-color: transparent;
+}
+
+.band .btn-light {
+  color: #33506a;
+  font-weight: 600;
+}
+
+/* ---------- Game cards on the Home page ---------- */
+.game {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr auto;
+  gap: 1.25rem;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+  padding: 1rem 1.25rem;
+}
+
+.game.is-full {
+  border-left-color: #9aa6b2;
+}
+
+.game-time {
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.15;
+  /* Equal-width digits, so the times line up under each other */
+  font-variant-numeric: tabular-nums;
+}
+
+.game-time small {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.game-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.game-meta {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.game-side {
+  text-align: right;
+}
+
+/* On a phone the places and the button move under the text instead of squeezing it */
+@media (max-width: 575px) {
+  .game {
+    grid-template-columns: 5rem 1fr;
+  }
+
+  .game-side {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+/* ---------- Places left ---------- */
+.places {
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.places::before {
+  content: "";
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.4rem;
+  border-radius: 50%;
+  /* The dot takes the colour of the text next to it */
+  background: currentColor;
+}
+
+.places-open {
+  color: var(--open);
+}
+
+.places-few {
+  color: var(--few);
+}
+
+.places-full {
+  color: var(--muted);
+}
+
+/* ---------- Chart stand-in ---------- */
+/* Plain bars until the chart.js chart is built */
+.bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.bars li {
+  display: grid;
+  grid-template-columns: 6rem 1fr 1.5rem;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.3rem 0;
+  font-size: 0.85rem;
+}
+
+.bars .bar {
+  height: 0.5rem;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+.bars .count {
+  text-align: right;
+  color: var(--muted);
+}
+
+/* ---------- Bootstrap components ---------- */
+/* White with a border and a shadow, so they stand out from the grey page */
+.card {
+  --bs-card-bg: var(--surface);
+  --bs-card-border-color: var(--line);
+  --bs-card-cap-bg: var(--tint);
+  box-shadow: var(--shadow);
+}
+
+.card-header {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.list-group {
+  --bs-list-group-bg: var(--surface);
+  --bs-list-group-border-color: var(--line);
+  --bs-list-group-action-hover-bg: var(--tint);
+}
+
+.list-group:not(.list-group-flush) {
+  box-shadow: var(--shadow);
+}
+
+.table-responsive {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+}
+
+.table {
+  --bs-table-bg: transparent;
+  --bs-table-striped-bg: var(--tint);
+  margin-bottom: 0;
+}
+
+.table th,
+.table td {
+  padding: 0.65rem 1rem;
+}
+
+.table th {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 0.2rem rgba(79, 111, 140, 0.2);
+}
+
+/* ---------- Buttons ---------- */
+/* Bootstrap keeps a button's colours in variables on each button class */
+.btn-primary {
+  --bs-btn-bg: var(--accent);
+  --bs-btn-border-color: var(--accent);
+  --bs-btn-hover-bg: var(--accent-dark);
+  --bs-btn-hover-border-color: var(--accent-dark);
+  --bs-btn-active-bg: var(--accent-dark);
+  --bs-btn-active-border-color: var(--accent-dark);
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--accent);
+  --bs-btn-border-color: var(--accent);
+  --bs-btn-hover-bg: var(--accent);
+  --bs-btn-hover-border-color: var(--accent);
+  --bs-btn-active-bg: var(--accent);
+  --bs-btn-active-border-color: var(--accent);
+}
+
+.btn-outline-secondary {
+  --bs-btn-color: var(--ink);
+  --bs-btn-bg: var(--surface);
+  --bs-btn-border-color: var(--line);
+  --bs-btn-hover-color: var(--accent);
+  --bs-btn-hover-bg: var(--surface);
+  --bs-btn-hover-border-color: var(--accent);
+  --bs-btn-active-color: var(--accent);
+  --bs-btn-active-bg: var(--surface);
+  --bs-btn-active-border-color: var(--accent);
+}
+
+.btn-success {
+  --bs-btn-bg: var(--open);
+  --bs-btn-border-color: var(--open);
+  --bs-btn-hover-bg: #33604f;
+  --bs-btn-hover-border-color: #33604f;
+  --bs-btn-active-bg: #33604f;
+  --bs-btn-active-border-color: #33604f;
+}
+
+.btn-danger {
+  --bs-btn-bg: var(--danger);
+  --bs-btn-border-color: var(--danger);
+  --bs-btn-hover-bg: var(--danger-dark);
+  --bs-btn-hover-border-color: var(--danger-dark);
+  --bs-btn-active-bg: var(--danger-dark);
+  --bs-btn-active-border-color: var(--danger-dark);
+}
+
+.btn-outline-danger {
+  --bs-btn-color: var(--danger);
+  --bs-btn-border-color: var(--danger);
+  --bs-btn-hover-bg: var(--danger);
+  --bs-btn-hover-border-color: var(--danger);
+  --bs-btn-active-bg: var(--danger);
+  --bs-btn-active-border-color: var(--danger);
+  --bs-btn-disabled-color: var(--danger);
+  --bs-btn-disabled-border-color: var(--danger);
+}

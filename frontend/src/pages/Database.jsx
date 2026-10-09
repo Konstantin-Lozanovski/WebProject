@@ -78,7 +78,7 @@ const Database = ({ onLogout }) => {
   const confirmation = pendingAction ? CONFIRMATIONS[pendingAction] : null;
 
   return (
-    <>
+    <div className="container py-4">
       <h1 className="h2 mb-2">Database</h1>
       <p className="text-muted mb-4">
         Tools for testing the app and returning it to a known starting point.
@@ -139,7 +139,7 @@ const Database = ({ onLogout }) => {
           onClose={closeModal}
         />
       )}
-    </>
+    </div>
   );
 };
 

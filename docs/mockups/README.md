@@ -9,7 +9,7 @@ Open `index.html` in a browser (double-click it). An internet connection is need
 ## What the pages share
 
 - **Navigation and footer.** Every page has the same navigation bar and the same footer. In the mock-ups the navigation shows every link at once so each screen can be reached. In the real app the links depend on who is logged in (a guest does not see "My games", only an admin sees "Admin overview").
-- **Bootstrap 5.3** from the CDN is the only stylesheet. There is no CSS of our own.
+- **Bootstrap 5.3** from the CDN, plus one stylesheet of our own, `mockups.css`. It sets the colours (a soft slate blue palette) by changing Bootstrap's colour variables, and adds the few classes the Home page needs: the search band, the game cards, the "places left" indicator and the chart bars.
 - **Three device widths.** The pages use Bootstrap's grid, so the columns sit side by side on a desktop, partly stack on a tablet and fully stack on a phone. The navigation collapses behind a button on small screens, and wide tables scroll sideways.
 - **Scripts.** The only script file is Bootstrap's own, which the collapsing navigation and the popups need. The one line of script we wrote is in `game-cancel.html`, to show the popup as soon as the page opens.
 - **Made-up users.** The Game page, Edit game and My games are shown the way the user `marko_p` sees them. The Admin overview is shown the way the admin sees it.
@@ -34,9 +34,9 @@ Open `index.html` in a browser (double-click it). An internet connection is need
 The first page of the app, open to everyone including guests.
 
 - Lists the upcoming games, soonest first. Each game shows its sport, city, venue, start time, duration, organizer and how many places are left. A full game shows "Full" instead.
-- Three filters narrow the list: sport, city and date. Sport and city are select inputs because they come from fixed sets.
+- Three filters narrow the list: sport, city and date. They sit in a blue band under the navigation, together with the page title. Sport and city are select inputs because they come from fixed sets.
 - "View game" opens the Game page.
-- A games-per-sport chart sits beside the list. The mock-up shows a placeholder where the chart will be drawn.
+- A games-per-sport chart sits beside the list. The mock-up shows plain bars where the chart will be drawn.
 
 ### 2. Game page (`game.html`)
 
@@ -92,7 +92,7 @@ A registered user's own history.
 - **Upcoming games** they are a player in, with a badge on the ones they organize.
 - **Finished games** they played in.
 - **My join requests** with the state of each: pending, accepted or declined. A pending request can be withdrawn.
-- A my-games-per-month chart for the last six months. The mock-up shows a placeholder.
+- A my-games-per-month chart for the last six months. The mock-up shows plain bars in its place.
 
 ### 9. Admin overview (`admin.html`)
 

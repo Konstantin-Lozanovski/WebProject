@@ -51,7 +51,9 @@ const App = () => {
       {/* flex column + min-vh-100 keeps the footer at the bottom on short pages */}
       <div className="d-flex flex-column min-vh-100">
         <Navigation user={user} onLogout={handleLogout} />
-        <main className="container flex-grow-1 py-4">
+        {/* No container here: each page adds its own, so that the Home
+            page can stretch its search band over the full width */}
+        <main className="flex-grow-1">
           <AppRoutes
             user={user}
             onLogin={handleLogin}

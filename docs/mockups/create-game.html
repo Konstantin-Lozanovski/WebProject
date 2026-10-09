@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Create game - Pickup Game Organizer</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="mockups.css" rel="stylesheet" />
   </head>
   <!-- flex column + min-vh-100 keeps the footer at the bottom on short pages -->
   <body class="d-flex flex-column min-vh-100">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark topbar">
       <div class="container">
         <a class="navbar-brand" href="index.html">Pickup Game Organizer</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -17,7 +18,7 @@
         <div class="collapse navbar-collapse" id="mainNav">
           <ul class="navbar-nav me-auto">
             <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
-            <li class="nav-item"><a class="nav-link" href="create-game.html">Create game</a></li>
+            <li class="nav-item"><a class="nav-link active" href="create-game.html">Create game</a></li>
             <li class="nav-item"><a class="nav-link" href="my-games.html">My games</a></li>
             <li class="nav-item"><a class="nav-link" href="admin.html">Admin overview</a></li>
             <li class="nav-item"><a class="nav-link" href="db.html">Database</a></li>
@@ -116,9 +117,10 @@
       </div>
     </main>
 
-    <footer class="bg-dark text-white text-center py-3 mt-auto">
-      <div class="container">
-        <small>Pickup Game Organizer · course project · weather data by Open-Meteo</small>
+    <footer class="footer py-3 mt-auto">
+      <div class="container d-flex flex-wrap justify-content-between gap-2">
+        <span>Pickup Game Organizer</span>
+        <span>Weather data by Open-Meteo</span>
       </div>
     </footer>
 

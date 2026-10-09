@@ -11,7 +11,7 @@ const Navigation = ({ user, onLogout }) => {
   };
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav className="navbar navbar-expand-lg navbar-dark topbar">
       <div className="container">
         <Link className="navbar-brand" to="/">
           Pickup Game Organizer
