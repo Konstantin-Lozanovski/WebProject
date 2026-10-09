@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin overview - Pickup Game Organizer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  </head>
+  <!-- flex column + min-vh-100 keeps the footer at the bottom on short pages -->
+  <body class="d-flex flex-column min-vh-100">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">Pickup Game Organizer</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="mainNav">
+          <ul class="navbar-nav me-auto">
+            <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="create-game.html">Create game</a></li>
+            <li class="nav-item"><a class="nav-link" href="my-games.html">My games</a></li>
+            <li class="nav-item"><a class="nav-link" href="admin.html">Admin overview</a></li>
+            <li class="nav-item"><a class="nav-link" href="db.html">Database</a></li>
+          </ul>
+          <ul class="navbar-nav">
+            <li class="nav-item"><a class="nav-link" href="login.html">Log in</a></li>
+            <li class="nav-item"><a class="nav-link" href="register.html">Register</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Shown as the logged-in admin "admin" -->
+    <main class="container flex-grow-1 py-4">
+      <h1 class="h2 mb-4">Admin overview</h1>
+
+      <!-- The totals are counted from the two lists below and from the other mock-up pages,
+           so the made-up data tells one story everywhere -->
+      <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+          <div class="card h-100">
+            <div class="card-header">Users</div>
+            <div class="card-body">
+              <p class="display-6 mb-0">10</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="card h-100">
+            <div class="card-header">Games by status</div>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item d-flex justify-content-between">Upcoming <strong>5</strong></li>
+              <li class="list-group-item d-flex justify-content-between">In progress <strong>1</strong></li>
+              <li class="list-group-item d-flex justify-content-between">Finished <strong>3</strong></li>
+            </ul>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="card h-100">
+            <div class="card-header">Join requests by state</div>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item d-flex justify-content-between">Pending <strong>4</strong></li>
+              <li class="list-group-item d-flex justify-content-between">Accepted <strong>44</strong></li>
+              <li class="list-group-item d-flex justify-content-between">Declined <strong>2</strong></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="h4 mb-3">Games</h2>
+      <!-- table-responsive lets the wide table scroll sideways on a phone;
+           text-nowrap keeps each cell on one line instead of squeezing the columns -->
+      <div class="table-responsive mb-4">
+        <table class="table table-striped align-middle text-nowrap">
+          <thead>
+            <tr>
+              <th>Sport</th>
+              <th>City</th>
+              <th>Venue</th>
+              <th>Start time</th>
+              <th>Status</th>
+              <th>Players</th>
+              <th>Organizer</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Football</td>
+              <td>Kumanovo</td>
+              <td>City stadium, small pitch</td>
+              <td>Fri 9 Oct 2026, 16:00</td>
+              <td><span class="badge text-bg-success">In progress</span></td>
+              <td>8 of 10</td>
+              <td>ivan_t</td>
+              <td class="text-end">
+                <a class="btn btn-outline-primary btn-sm" href="game.html">View</a>
+                <a class="btn btn-outline-primary btn-sm" href="edit-game.html">Edit</a>
+                <a class="btn btn-outline-danger btn-sm" href="game-cancel.html">Cancel</a>
+              </td>
+            </tr>
+            <tr>
+              <td>Football</td>
+              <td>Skopje</td>
+              <td>Sports Center Boris Trajkovski, pitch 2</td>
+              <td>Sat 10 Oct 2026, 18:00</td>
+              <td><span class="badge text-bg-primary">Upcoming</span></td>
+              <td>7 of 10</td>
+              <td>marko_p</td>
+              <td class="text-end">
+                <a class="btn btn-outline-primary btn-sm" href="game.html">View</a>
+                <a class="btn btn-outline-primary btn-sm" href="edit-game.html">Edit</a>
+                <a class="btn btn-outline-danger btn-sm" href="game-cancel.html">Cancel</a>
+              </td>
+            </tr>
+            <tr>
+              <td>Basketball</td>
+              <td>Bitola</td>
+              <td>Outdoor court behind the Sports Hall Mladost</td>
+              <td>Sun 11 Oct 2026, 10:00</td>
+              <td><span class="badge text-bg-primary">Upcoming</span></td>
+              <td>10 of 10</td>
+              <td>ana_s</td>
+              <td class="text-end">
+                <a class="btn btn-outline-primary btn-sm" href="game.html">View</a>
+                <a class="btn btn-outline-primary btn-sm" href="edit-game.html">Edit</a>
+                <a class="btn btn-outline-danger btn-sm" href="game-cancel.html">Cancel</a>
+              </td>
+            </tr>
+            <tr>
+              <td>Padel</td>
+              <td>Skopje</td>
+              <td>Padel Club Vodno, court 1</td>
+              <td>Mon 12 Oct 2026, 19:30</td>
+              <td><span class="badge text-bg-primary">Upcoming</span></td>
+              <td>3 of 4</td>
+              <td>stefan23</td>
+              <td class="text-end">
+                <a class="btn btn-outline-primary btn-sm" href="game.html">View</a>
+                <a class="btn btn-outline-primary btn-sm" href="edit-game.html">Edit</a>
+                <a class="btn btn-outline-danger btn-sm" href="game-cancel.html">Cancel</a>
+              </td>
+            </tr>
+            <tr>
+              <td>Volleyball</td>
+              <td>Ohrid</td>
+              <td>Beach court at Gradište</td>
+              <td>Wed 14 Oct 2026, 17:00</td>
+              <td><span class="badge text-bg-primary">Upcoming</span></td>
+              <td>4 of 12</td>
+              <td>elena_k</td>
+              <td class="text-end">
+                <a class="btn btn-outline-primary btn-sm" href="game.html">View</a>
+                <a class="btn btn-outline-primary btn-sm" href="edit-game.html">Edit</a>
+                <a class="btn btn-outline-danger btn-sm" href="game-cancel.html">Cancel</a>
+              </td>
+            </tr>
+            <tr>
+              <td>Tennis</td>
+              <td>Tetovo</td>
+              <td>City tennis courts, court 3</td>
+              <td>Sat 17 Oct 2026, 09:00</td>
+              <td><span class="badge text-bg-primary">Upcoming</span></td>
+              <td>1 of 2</td>
+              <td>david_m</td>
+              <td class="text-end">
+                <a class="btn btn-outline-primary btn-sm" href="game.html">View</a>
+                <a class="btn btn-outline-primary btn-sm" href="edit-game.html">Edit</a>
+                <a class="btn btn-outline-danger btn-sm" href="game-cancel.html">Cancel</a>
+              </td>
+            </tr>
+            <tr>
+              <td>Basketball</td>
+              <td>Skopje</td>
+              <td>Court at Gradski Park</td>
+              <td>Sat 3 Oct 2026, 17:00</td>
+              <td><span class="badge text-bg-secondary">Finished</span></td>
+              <td>8 of 10</td>
+              <td>deleted user</td>
+              <td class="text-end">
+                <a class="btn btn-outline-primary btn-sm" href="game.html">View</a>
+                <a class="btn btn-outline-primary btn-sm" href="edit-game.html">Edit</a>
+                <a class="btn btn-outline-danger btn-sm" href="game-cancel.html">Cancel</a>
+              </td>
+            </tr>
+            <tr>
+              <td>Football</td>
+              <td>Skopje</td>
+              <td>Sports Center Boris Trajkovski, pitch 2</td>
+              <td>Sat 26 Sep 2026, 18:00</td>
+              <td><span class="badge text-bg-secondary">Finished</span></td>
+              <td>10 of 10</td>
+              <td>marko_p</td>
+              <td class="text-end">
+                <a class="btn btn-outline-primary btn-sm" href="game.html">View</a>
+                <a class="btn btn-outline-primary btn-sm" href="edit-game.html">Edit</a>
+                <a class="btn btn-outline-danger btn-sm" href="game-cancel.html">Cancel</a>
+              </td>
+            </tr>
+            <tr>
+              <td>Tennis</td>
+              <td>Veles</td>
+              <td>Tennis Club Veles, court 2</td>
+              <td>Sat 12 Sep 2026, 10:00</td>
+              <td><span class="badge text-bg-secondary">Finished</span></td>
+              <td>2 of 2</td>
+              <td>sara_b</td>
+              <td class="text-end">
+                <a class="btn btn-outline-primary btn-sm" href="game.html">View</a>
+                <a class="btn btn-outline-primary btn-sm" href="edit-game.html">Edit</a>
+                <a class="btn btn-outline-danger btn-sm" href="game-cancel.html">Cancel</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 class="h4 mb-3">Users</h2>
+      <div class="table-responsive">
+        <table class="table table-striped align-middle">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>admin <span class="badge text-bg-dark">You</span></td>
+              <td>admin@example.com</td>
+              <!-- An admin cannot demote or delete themselves, so their own controls are disabled -->
+              <td>
+                <select class="form-select form-select-sm w-auto" aria-label="Role of admin" disabled>
+                  <option>User</option>
+                  <option selected>Admin</option>
+                </select>
+              </td>
+              <td class="text-end"><button class="btn btn-outline-danger btn-sm" type="button" disabled>Delete</button></td>
+            </tr>
+            <tr>
+              <td>marko_p</td>
+              <td>marko@example.com</td>
+              <td>
+                <select class="form-select form-select-sm w-auto" aria-label="Role of marko_p">
+                  <option selected>User</option>
+                  <option>Admin</option>
+                </select>
+              </td>
+              <td class="text-end"><button class="btn btn-outline-danger btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#deleteUserModal">Delete</button></td>
+            </tr>
+            <tr>
+              <td>ana_s</td>
+              <td>ana@example.com</td>
+              <td>
+                <select class="form-select form-select-sm w-auto" aria-label="Role of ana_s">
+                  <option selected>User</option>
+                  <option>Admin</option>
+                </select>
+              </td>
+              <td class="text-end"><button class="btn btn-outline-danger btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#deleteUserModal">Delete</button></td>
+            </tr>
+            <tr>
+              <td>stefan23</td>
+              <td>stefan@example.com</td>
+              <td>
+                <select class="form-select form-select-sm w-auto" aria-label="Role of stefan23">
+                  <option selected>User</option>
+                  <option>Admin</option>
+                </select>
+              </td>
+              <td class="text-end"><button class="btn btn-outline-danger btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#deleteUserModal">Delete</button></td>
+            </tr>
+            <tr>
+              <td>elena_k</td>
+              <td>elena@example.com</td>
+              <td>
+                <select class="form-select form-select-sm w-auto" aria-label="Role of elena_k">
+                  <option selected>User</option>
+                  <option>Admin</option>
+                </select>
+              </td>
+              <td class="text-end"><button class="btn btn-outline-danger btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#deleteUserModal">Delete</button></td>
+            </tr>
+            <tr>
+              <td>david_m</td>
+              <td>david@example.com</td>
+              <td>
+                <select class="form-select form-select-sm w-auto" aria-label="Role of david_m">
+                  <option selected>User</option>
+                  <option>Admin</option>
+                </select>
+              </td>
+              <td class="text-end"><button class="btn btn-outline-danger btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#deleteUserModal">Delete</button></td>
+            </tr>
+            <tr>
+              <td>ivan_t</td>
+              <td>ivan@example.com</td>
+              <td>
+                <select class="form-select form-select-sm w-auto" aria-label="Role of ivan_t">
+                  <option selected>User</option>
+                  <option>Admin</option>
+                </select>
+              </td>
+              <td class="text-end"><button class="btn btn-outline-danger btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#deleteUserModal">Delete</button></td>
+            </tr>
+            <tr>
+              <td>sara_b</td>
+              <td>sara@example.com</td>
+              <td>
+                <select class="form-select form-select-sm w-auto" aria-label="Role of sara_b">
+                  <option selected>User</option>
+                  <option>Admin</option>
+                </select>
+              </td>
+              <td class="text-end"><button class="btn btn-outline-danger btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#deleteUserModal">Delete</button></td>
+            </tr>
+            <tr>
+              <td>nikola99</td>
+              <td>nikola@example.com</td>
+              <td>
+                <select class="form-select form-select-sm w-auto" aria-label="Role of nikola99">
+                  <option selected>User</option>
+                  <option>Admin</option>
+                </select>
+              </td>
+              <td class="text-end"><button class="btn btn-outline-danger btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#deleteUserModal">Delete</button></td>
+            </tr>
+            <tr>
+              <td>petar_v</td>
+              <td>petar@example.com</td>
+              <td>
+                <select class="form-select form-select-sm w-auto" aria-label="Role of petar_v">
+                  <option selected>User</option>
+                  <option>Admin</option>
+                </select>
+              </td>
+              <td class="text-end"><button class="btn btn-outline-danger btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#deleteUserModal">Delete</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+    <footer class="bg-dark text-white text-center py-3 mt-auto">
+      <div class="container">
+        <small>Pickup Game Organizer · course project · weather data by Open-Meteo</small>
+      </div>
+    </footer>
+
+    <!-- Opened by the Delete buttons through Bootstrap's data attributes, so no script of our own is needed -->
+    <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title h5" id="deleteUserModalTitle">Delete this user?</h2>
+            <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            Their upcoming games as organizer are cancelled and their join requests are deleted.
+            Their finished games and messages stay, shown with "deleted user" in place of the name.
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Keep user</button>
+            <button class="btn btn-danger" type="button" data-bs-dismiss="modal">Delete user</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap's own script: needed for the collapsing navigation and the popup -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
