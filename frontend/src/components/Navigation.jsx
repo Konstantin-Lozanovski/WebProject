@@ -1,6 +1,15 @@
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 
-const Navigation = () => {
+// user is null for a guest
+const Navigation = ({ user, onLogout }) => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    onLogout();
+    // The page being viewed may be one a guest cannot use
+    navigate("/");
+  };
+
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
       <div className="container">
@@ -26,39 +35,63 @@ const Navigation = () => {
                 Home
               </NavLink>
             </li>
-            <li className="nav-item">
-              <NavLink className="nav-link" to="/games/new">
-                Create game
-              </NavLink>
-            </li>
-            <li className="nav-item">
-              <NavLink className="nav-link" to="/my-games">
-                My games
-              </NavLink>
-            </li>
-            <li className="nav-item">
-              <NavLink className="nav-link" to="/admin">
-                Admin overview
-              </NavLink>
-            </li>
+            {/* Hiding links is only for tidiness; the API does the real checks */}
+            {user && (
+              <li className="nav-item">
+                <NavLink className="nav-link" to="/games/new">
+                  Create game
+                </NavLink>
+              </li>
+            )}
+            {user && (
+              <li className="nav-item">
+                <NavLink className="nav-link" to="/my-games">
+                  My games
+                </NavLink>
+              </li>
+            )}
+            {user && user.isAdmin() && (
+              <li className="nav-item">
+                <NavLink className="nav-link" to="/admin">
+                  Admin overview
+                </NavLink>
+              </li>
+            )}
             <li className="nav-item">
               <NavLink className="nav-link" to="/db">
                 Database
               </NavLink>
             </li>
           </ul>
-          <ul className="navbar-nav">
-            <li className="nav-item">
-              <NavLink className="nav-link" to="/login">
-                Log in
-              </NavLink>
-            </li>
-            <li className="nav-item">
-              <NavLink className="nav-link" to="/register">
-                Register
-              </NavLink>
-            </li>
-          </ul>
+          {user ? (
+            <ul className="navbar-nav">
+              <li className="nav-item">
+                <span className="navbar-text me-lg-2">{user.username}</span>
+              </li>
+              <li className="nav-item">
+                <button
+                  className="nav-link btn btn-link"
+                  type="button"
+                  onClick={handleLogout}
+                >
+                  Log out
+                </button>
+              </li>
+            </ul>
+          ) : (
+            <ul className="navbar-nav">
+              <li className="nav-item">
+                <NavLink className="nav-link" to="/login">
+                  Log in
+                </NavLink>
+              </li>
+              <li className="nav-item">
+                <NavLink className="nav-link" to="/register">
+                  Register
+                </NavLink>
+              </li>
+            </ul>
+          )}
         </div>
       </div>
     </nav>
