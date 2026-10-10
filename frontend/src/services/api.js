@@ -132,6 +132,34 @@ export const withdrawJoinRequest = async (gameId, requestId) => {
   await axiosInstance.delete(`/games/${gameId}/join-requests/${requestId}`);
 };
 
+// GET /api/me/games
+// The games the logged-in user is a player in, as two lists: the upcoming
+// ones and those in progress soonest first, the finished ones most recent first
+export const fetchMyGames = async () => {
+  const response = await axiosInstance.get("/me/games");
+  return {
+    currentGames: response.data.currentGames.map((game) => new Game(game)),
+    finishedGames: response.data.finishedGames.map((game) => new Game(game)),
+  };
+};
+
+// GET /api/me/join-requests
+// The logged-in user's join requests in every state, newest first
+export const fetchMyJoinRequests = async () => {
+  const response = await axiosInstance.get("/me/join-requests");
+  return response.data.joinRequests.map((joinRequest) => {
+    return new JoinRequest(joinRequest);
+  });
+};
+
+// GET /api/me/month-counts
+// Returns a list like [{ month: "2026-05", count: 0 }, ...]: the logged-in
+// user's finished games in each of the last six months, oldest first
+export const fetchMyMonthCounts = async () => {
+  const response = await axiosInstance.get("/me/month-counts");
+  return response.data.monthCounts;
+};
+
 // PUT /api/games/:gameId/players/:playerId
 // team is "A", "B" or "unassigned". The request behind every drop in the
 // teams view.

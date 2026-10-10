@@ -7,6 +7,7 @@ import gameRoutes from "./routes/game.routes.js";
 import joinRequestRoutes from "./routes/join-request.routes.js";
 import playerRoutes from "./routes/player.routes.js";
 import messageRoutes from "./routes/message.routes.js";
+import meRoutes from "./routes/me.routes.js";
 import notFoundMiddleware from "./middleware/not-found.js";
 import errorHandlerMiddleware from "./middleware/error-handler.js";
 
@@ -21,6 +22,7 @@ app.use("/api/games", gameRoutes);
 app.use("/api/games/:gameId/join-requests", joinRequestRoutes);
 app.use("/api/games/:gameId/players", playerRoutes);
 app.use("/api/games/:gameId/messages", messageRoutes);
+app.use("/api/me", meRoutes);
 app.use("/api", docsRoutes);
 
 // Order matters: these two come after every route, so they only see

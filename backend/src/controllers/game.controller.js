@@ -14,7 +14,7 @@ import Player from "../models/player.model.js";
 
 // Every city of the app is in Macedonia, so "a day" always means a day there,
 // whatever the clock of the server says (in the cloud it is UTC)
-const TIME_ZONE = "Europe/Skopje";
+export const TIME_ZONE = "Europe/Skopje";
 
 // "+01:00" in winter and "+02:00" in summer: how far Macedonia is ahead of
 // UTC at the given moment
@@ -51,7 +51,7 @@ const getDayEnd = (day) => {
 // The game as the client sees it. The status and the number of players are
 // not fields of the document: they are worked out here for every answer.
 // The organizer must be populated before this is called.
-const toPublicGame = (game, playerCount) => {
+export const toPublicGame = (game, playerCount) => {
   return {
     _id: game._id,
     organizer: game.organizer,
@@ -81,7 +81,7 @@ export const toPublicPlayer = (player) => {
 
 // Returns an object like { gameId: 3 }, so the list needs one query for
 // all its games and not one query per game
-const countPlayersByGame = async (games) => {
+export const countPlayersByGame = async (games) => {
   const gameIds = games.map((game) => game._id);
   const players = await Player.find({ game: { $in: gameIds } });
 

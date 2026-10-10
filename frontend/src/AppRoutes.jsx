@@ -6,6 +6,7 @@ import Database from "./pages/Database.jsx";
 import CreateGame from "./pages/CreateGame.jsx";
 import EditGame from "./pages/EditGame.jsx";
 import GamePage from "./pages/GamePage.jsx";
+import MyGames from "./pages/MyGames.jsx";
 import NotFound from "./pages/NotFound.jsx";
 
 // All client-side routes live in this module, apart from the main app module.
@@ -38,6 +39,12 @@ const AppRoutes = ({ user, onLogin, onLogout }) => {
         }
       />
       <Route path="/games/:id" element={<GamePage user={user} />} />
+      <Route
+        path="/my-games"
+        element={
+          user ? <MyGames user={user} /> : <Navigate to="/login" replace />
+        }
+      />
       {/* Open to everyone: after "delete all" there is no admin to log in as */}
       <Route path="/db" element={<Database onLogout={onLogout} />} />
       {/* "*" catches every address that no other route matched */}

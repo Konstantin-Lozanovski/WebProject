@@ -23,3 +23,11 @@ export const formatPlaces = (placesLeft) => {
   if (placesLeft === 1) return "1 place left";
   return `${placesLeft} places left`;
 };
+
+// The colour of the "places left" text: grey when full, amber when the
+// game is nearly full, green otherwise
+export const getPlacesClass = (placesLeft) => {
+  if (placesLeft <= 0) return "places-full";
+  if (placesLeft <= 2) return "places-few";
+  return "places-open";
+};

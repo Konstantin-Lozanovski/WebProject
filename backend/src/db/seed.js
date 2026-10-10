@@ -74,6 +74,49 @@ const DEMO_GAMES = [
     organizerTeam: "A",
     joinRequests: [{ user: "ana_s", state: "accepted", team: "B" }],
   },
+  // Finished long ago: the history of marko_p, for the my-games-per-month
+  // chart. They are 35 days or more apart from each other and from his
+  // finished game above, and no month is that long, so each one falls in a
+  // month of its own, whenever the seed is run.
+  {
+    organizer: "marko_p",
+    sport: "Football",
+    city: "Skopje",
+    venue: "Sports Center Boris Trajkovski, pitch 2",
+    startsInHours: -40 * 24,
+    duration: 90,
+    maxPlayers: 10,
+    organizerTeam: "A",
+    joinRequests: [
+      { user: "ivan_t", state: "accepted", team: "B" },
+      { user: "elena_k", state: "accepted", team: "B" },
+    ],
+  },
+  {
+    organizer: "david_m",
+    sport: "Tennis",
+    city: "Veles",
+    venue: "Tennis Club Veles, court 2",
+    startsInHours: -75 * 24,
+    duration: 60,
+    maxPlayers: 2,
+    organizerTeam: "A",
+    joinRequests: [{ user: "marko_p", state: "accepted", team: "B" }],
+  },
+  {
+    organizer: "marko_p",
+    sport: "Padel",
+    city: "Skopje",
+    venue: "Padel Club Vodno, court 1",
+    startsInHours: -110 * 24,
+    duration: 90,
+    maxPlayers: 4,
+    organizerTeam: "A",
+    joinRequests: [
+      { user: "sara_b", state: "accepted", team: "A" },
+      { user: "ana_s", state: "accepted", team: "B" },
+    ],
+  },
   // In progress: it started less than 90 minutes ago and lasts 120
   {
     organizer: "ivan_t",

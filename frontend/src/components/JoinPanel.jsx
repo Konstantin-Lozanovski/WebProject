@@ -1,11 +1,5 @@
 import { Link } from "react-router-dom";
-
-// How each state is shown: its text and the Bootstrap colour of its badge
-const STATE_BADGES = {
-  pending: { label: "Pending", variant: "warning" },
-  accepted: { label: "Accepted", variant: "success" },
-  declined: { label: "Declined", variant: "secondary" },
-};
+import { STATE_BADGES } from "../models/JoinRequest.js";
 
 // What the person looking at a game sees about joining it: the way in
 // ("Log in to join" or "Request to join"), the state of the join request

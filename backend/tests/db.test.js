@@ -88,12 +88,12 @@ test("seeding a second time gives the same data, without what was added in betwe
   const body = await response.json();
 
   assert.equal(response.status, 201);
-  // 20 players: the 9 organizers and the users of the 11 accepted join requests
+  // 28 players: the 12 organizers and the users of the 16 accepted join requests
   assert.deepEqual(body.counts, {
     users: 7,
-    games: 9,
-    joinRequests: 19,
-    players: 20,
+    games: 12,
+    joinRequests: 24,
+    players: 28,
     messages: 11,
   });
 
@@ -166,6 +166,22 @@ test("seeding adds messages to a few games, each posted by a player of that game
   // Only the upcoming games are listed; the finished one and the one in
   // progress have messages too
   assert.equal(gamesWithMessages, 2);
+});
+
+test("seeding gives marko_p finished games in several different months", async () => {
+  const seed = await post("/api/db/seed");
+  assert.equal(seed.status, 201);
+
+  const markoLogin = await login("marko@example.com", "football1");
+  const headers = { Authorization: `Bearer ${(await markoLogin.json()).token}` };
+
+  const response = await fetch(`${baseUrl}/api/me/month-counts`, { headers });
+  assert.equal(response.status, 200);
+  const monthCounts = (await response.json()).monthCounts;
+
+  // Enough for the my-games-per-month chart to show more than one bar
+  const monthsWithGames = monthCounts.filter((monthCount) => monthCount.count > 0);
+  assert.ok(monthsWithGames.length >= 3);
 });
 
 test("deleting all data after a seed leaves no demo account to log in with", async () => {

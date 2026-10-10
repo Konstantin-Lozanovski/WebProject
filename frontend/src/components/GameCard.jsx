@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { formatTime, formatPlaces } from "../services/helpers.js";
+import { formatTime, formatPlaces, getPlacesClass } from "../services/helpers.js";
 
 // "Sat 10 Oct"
 const formatShortDate = (date) => {
@@ -8,14 +8,6 @@ const formatShortDate = (date) => {
     day: "numeric",
     month: "short",
   });
-};
-
-// The colour of the "places left" text: grey when full, amber when the
-// game is nearly full, green otherwise
-const getPlacesClass = (placesLeft) => {
-  if (placesLeft <= 0) return "places-full";
-  if (placesLeft <= 2) return "places-few";
-  return "places-open";
 };
 
 // One game in a list of games

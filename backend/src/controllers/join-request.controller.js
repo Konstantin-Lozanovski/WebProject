@@ -11,7 +11,7 @@ import JoinRequest from "../models/join-request.model.js";
 const HOUR = 60 * 60 * 1000;
 
 // The user must be populated before this is called
-const toPublicJoinRequest = (joinRequest) => {
+export const toPublicJoinRequest = (joinRequest) => {
   return {
     _id: joinRequest._id,
     user: joinRequest.user,
