@@ -5,6 +5,7 @@ import {
   ForbiddenError,
 } from "../errors/index.js";
 import Game, {
+  SPORTS,
   getStatus,
   findOverlappingGame,
   deleteGameWithItsDocuments,
@@ -162,6 +163,20 @@ export const getUpcomingGames = async (req, res) => {
   });
 
   res.status(StatusCodes.OK).json({ games: publicGames });
+};
+
+// GET /api/games/sport-counts
+export const getSportCounts = async (req, res) => {
+  const sportCounts = [];
+
+  // One small count per sport instead of one grouped query: a sport that has
+  // no games still gets its 0, and the answer keeps the order of SPORTS
+  for (const sport of SPORTS) {
+    const count = await Game.countDocuments({ sport });
+    sportCounts.push({ sport, count });
+  }
+
+  res.status(StatusCodes.OK).json({ sportCounts });
 };
 
 // GET /api/games/:id

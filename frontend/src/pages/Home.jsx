@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import GameCard from "../components/GameCard.jsx";
-import { fetchUpcomingGames } from "../services/api.js";
+import BarChart from "../components/BarChart.jsx";
+import { fetchUpcomingGames, fetchSportCounts } from "../services/api.js";
 import { SPORTS, CITIES } from "../models/Game.js";
 
 // What a date input gives: "2026-10-12"
@@ -11,6 +12,10 @@ const Home = () => {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  // The number of games of each sport once it arrived, or null
+  const [sportCounts, setSportCounts] = useState(null);
+  // Why the chart could not be loaded; empty when it was
+  const [chartError, setChartError] = useState("");
 
   // The chosen filters live in the address (/?sport=Padel&city=Bitola) and
   // nowhere else, so refresh, back and forward all show the same results
@@ -64,6 +69,21 @@ const Home = () => {
     // Runs again every time a filter in the address changes
   }, [sport, city, date]);
 
+  useEffect(() => {
+    const getSportCounts = async () => {
+      try {
+        const data = await fetchSportCounts();
+        setSportCounts(data);
+      } catch (error) {
+        console.error("Error fetching the sport counts:", error);
+        setChartError("The chart could not be loaded.");
+      }
+    };
+
+    getSportCounts();
+    // Only once: the chart counts every game, so the filters do not change it
+  }, []);
+
   // name is "sport", "city" or "date"; an empty value removes the filter
   // from the address
   const changeFilter = (name, value) => {
@@ -83,13 +103,19 @@ const Home = () => {
     setSearchParams({});
   };
 
-  const countGames = (sport) => {
-    return games.filter((game) => game.sport === sport).length;
-  };
+  const renderChart = () => {
+    if (chartError) return <p className="text-danger">{chartError}</p>;
+    if (!sportCounts) return <p className="text-muted">Loading chart...</p>;
 
-  // The longest bar belongs to the sport with the most games.
-  // The 1 keeps the division below from being a division by zero.
-  const highestCount = Math.max(1, ...SPORTS.map(countGames));
+    return (
+      <BarChart
+        title="Games per sport"
+        labels={sportCounts.map((sportCount) => sportCount.sport)}
+        values={sportCounts.map((sportCount) => sportCount.count)}
+        emptyText="There are no games yet."
+      />
+    );
+  };
 
   const renderGames = () => {
     if (loading) return <p className="text-muted">Loading games...</p>;
@@ -196,28 +222,7 @@ const Home = () => {
         <div className="row g-4">
           <div className="col-12 col-lg-8">{renderGames()}</div>
 
-          <div className="col-12 col-lg-4">
-            <div className="card">
-              <div className="card-header">Games per sport</div>
-              {/* Plain bars until the chart.js chart is built */}
-              <div className="card-body">
-                <ul className="bars">
-                  {SPORTS.map((sport) => (
-                    <li key={sport}>
-                      <span>{sport}</span>
-                      <span
-                        className="bar"
-                        style={{
-                          width: `${(countGames(sport) / highestCount) * 100}%`,
-                        }}
-                      ></span>
-                      <span className="count">{countGames(sport)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
+          <div className="col-12 col-lg-4">{renderChart()}</div>
         </div>
       </div>
     </>

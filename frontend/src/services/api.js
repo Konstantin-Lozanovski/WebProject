@@ -59,6 +59,14 @@ export const fetchUpcomingGames = async (sport, city, date) => {
   return response.data.games.map((game) => new Game(game));
 };
 
+// GET /api/games/sport-counts
+// Returns a list like [{ sport: "Football", count: 3 }, ...] with every
+// sport in it, also the ones without games
+export const fetchSportCounts = async () => {
+  const response = await axiosInstance.get("/games/sport-counts");
+  return response.data.sportCounts;
+};
+
 // GET /api/games/:id
 export const fetchGame = async (gameId) => {
   const response = await axiosInstance.get(`/games/${gameId}`);

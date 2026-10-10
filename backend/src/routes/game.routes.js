@@ -1,6 +1,7 @@
 import express from "express";
 import {
   getUpcomingGames,
+  getSportCounts,
   getGame,
   createGame,
   updateGame,
@@ -63,6 +64,36 @@ const router = express.Router();
  *               $ref: "#/components/schemas/Error"
  */
 router.get("/", gameSearchRules, validate, getUpcomingGames);
+
+/**
+ * @openapi
+ * /api/games/sport-counts:
+ *   get:
+ *     summary: Count the games of each sport
+ *     description: Open to everyone, no token needed. Every game is counted, whatever its status. All five sports are always in the answer, in the same order, and a sport without games has a count of 0.
+ *     tags: [Games]
+ *     responses:
+ *       200:
+ *         description: One entry per sport
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sportCounts:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       sport:
+ *                         type: string
+ *                         enum: [Football, Basketball, Volleyball, Tennis, Padel]
+ *                       count:
+ *                         type: integer
+ *                         example: 3
+ */
+// Above /:id, or Express would read "sport-counts" as the id of a game
+router.get("/sport-counts", getSportCounts);
 
 /**
  * @openapi
