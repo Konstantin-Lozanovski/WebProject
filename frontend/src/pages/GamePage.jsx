@@ -11,6 +11,7 @@ import {
   sendJoinRequest,
   answerJoinRequest,
   withdrawJoinRequest,
+  deletePlayer,
 } from "../services/api.js";
 import { formatDateTime, formatPlaces } from "../services/helpers.js";
 
@@ -71,6 +72,17 @@ const GamePage = ({ user }) => {
   const [working, setWorking] = useState(false);
   // The join request waiting in the "Decline?" popup, or null
   const [joinRequestToDecline, setJoinRequestToDecline] = useState(null);
+  // Whether the "Leave this game?" popup is open
+  const [confirmingLeave, setConfirmingLeave] = useState(false);
+  // The player waiting in the "Remove?" popup, or null
+  const [playerToRemove, setPlayerToRemove] = useState(null);
+
+  // The logged-in user's own player in this game; undefined for a guest and
+  // for a user who is not a player. A player whose account was deleted has
+  // no user.
+  const myPlayer = players.find((player) => {
+    return user && player.user && player.user._id === user._id;
+  });
 
   const showPage = (page) => {
     setGame(page.game);
@@ -172,6 +184,19 @@ const GamePage = ({ user }) => {
     runJoinAction(() => answerJoinRequest(id, joinRequest._id, "declined"));
   };
 
+  // Leaving and removing go through runJoinAction too: both free a place
+  // and delete a join request, so the same parts of the page change
+  const handleLeaveGame = () => {
+    setConfirmingLeave(false);
+    runJoinAction(() => deletePlayer(id, myPlayer._id));
+  };
+
+  const handleRemovePlayer = () => {
+    const player = playerToRemove;
+    setPlayerToRemove(null);
+    runJoinAction(() => deletePlayer(id, player._id));
+  };
+
   if (loading) return <p className="text-center py-5">Loading...</p>;
 
   if (loadError) {
@@ -192,11 +217,6 @@ const GamePage = ({ user }) => {
     if (!game.organizer || !player.user) return false;
     return player.user._id === game.organizer._id;
   };
-
-  // A guest is never a player; a player whose account was deleted has no user
-  const isPlayer = players.some((player) => {
-    return user && player.user && player.user._id === user._id;
-  });
 
   return (
     <div className="container py-4">
@@ -233,11 +253,12 @@ const GamePage = ({ user }) => {
       <JoinPanel
         user={user}
         game={game}
-        isPlayer={isPlayer}
+        isPlayer={myPlayer !== undefined}
         joinRequest={myJoinRequest}
         working={working}
         onSend={handleSendJoinRequest}
         onWithdraw={handleWithdrawJoinRequest}
+        onLeave={() => setConfirmingLeave(true)}
       />
 
       <div className="row g-4">
@@ -282,10 +303,30 @@ const GamePage = ({ user }) => {
             </div>
             <ul className="list-group list-group-flush">
               {players.map((player) => (
-                <li className="list-group-item" key={player._id}>
-                  {player.username()}{" "}
-                  {isOrganizer(player) && (
-                    <span className="badge text-bg-dark">Organizer</span>
+                <li
+                  className="list-group-item d-flex justify-content-between align-items-center gap-2"
+                  key={player._id}
+                >
+                  <span>
+                    {player.username()}{" "}
+                    {isOrganizer(player) && (
+                      <span className="badge text-bg-dark">Organizer</span>
+                    )}
+                  </span>
+                  {/* The organizer is never removed: the game is cancelled
+                      instead. An admin who is a player has "Leave game" for
+                      their own row. */}
+                  {game.playersCanBeRemovedBy(user) &&
+                    !isOrganizer(player) &&
+                    player !== myPlayer && (
+                    <button
+                      className="btn btn-outline-danger btn-sm"
+                      type="button"
+                      disabled={working}
+                      onClick={() => setPlayerToRemove(player)}
+                    >
+                      Remove
+                    </button>
                   )}
                 </li>
               ))}
@@ -317,6 +358,30 @@ const GamePage = ({ user }) => {
           confirmVariant="danger"
           onConfirm={handleDeclineJoinRequest}
           onClose={() => setJoinRequestToDecline(null)}
+        />
+      )}
+
+      {confirmingLeave && (
+        <Modal
+          title="Leave this game?"
+          text="Your place will be freed for someone else. You can send a new join request later, if the game is not full by then."
+          confirmLabel="Leave game"
+          cancelLabel="Stay"
+          confirmVariant="danger"
+          onConfirm={handleLeaveGame}
+          onClose={() => setConfirmingLeave(false)}
+        />
+      )}
+
+      {playerToRemove && (
+        <Modal
+          title="Remove this player?"
+          text={`${playerToRemove.username()} will lose their place in this game. They can send a new join request later.`}
+          confirmLabel="Remove"
+          cancelLabel="Go back"
+          confirmVariant="danger"
+          onConfirm={handleRemovePlayer}
+          onClose={() => setPlayerToRemove(null)}
         />
       )}
 

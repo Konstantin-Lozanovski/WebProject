@@ -218,19 +218,38 @@ export const answerJoinRequest = async (req, res) => {
     .json({ joinRequest: toPublicJoinRequest(joinRequest) });
 };
 
+// The one way a user gets out of a game. Withdrawing a join request, leaving
+// and removing a player all end here; each does its own permission check
+// first, and that check is the only thing that differs between them.
+// userId is the user who gets out, actingUser the one who asked for it.
+export const takeUserOutOfGame = async (game, userId, actingUser) => {
+  // One hour before the start is the cutoff, so a team is never left short
+  // at the last minute. An admin is not held to it.
+  const cutoff = game.startTime.getTime() - HOUR;
+  if (actingUser.role !== "admin" && Date.now() > cutoff)
+    throw new ConflictError(
+      "Too late: withdrawing a join request, leaving a game and removing a player are allowed until one hour before the game starts",
+    );
+
+  const userAndGame = { user: userId, game: game._id };
+
+  // The two deletes are not one transaction, so the order decides what a
+  // failure halfway leaves behind. The request first and the player second
+  // leaves a player without a join request, who can simply leave or be
+  // removed again. The other order would leave an accepted request without
+  // a player: the user could neither withdraw it nor send a new one.
+  // After a withdraw there is no player, and deleting nothing is not an error.
+  await JoinRequest.deleteOne(userAndGame);
+  await Player.deleteOne(userAndGame);
+};
+
 // Throws unless the user may withdraw the join request: the user who sent
-// it until one hour before the game starts, or an admin at any time
-const checkCanWithdraw = (joinRequest, game, user) => {
+// it, or an admin
+const checkCanWithdraw = (joinRequest, user) => {
   if (user.role === "admin") return;
 
   if (!joinRequest.user.equals(user._id))
     throw new ForbiddenError("You can only withdraw your own join request");
-
-  const cutoff = game.startTime.getTime() - HOUR;
-  if (Date.now() > cutoff)
-    throw new ConflictError(
-      "A join request can be withdrawn until one hour before the game starts",
-    );
 };
 
 // DELETE /api/games/:gameId/join-requests/:requestId
@@ -239,14 +258,14 @@ export const withdrawJoinRequest = async (req, res) => {
   const game = await findGame(req.params.gameId);
 
   const joinRequest = await findJoinRequest(req.params.requestId, game);
-  checkCanWithdraw(joinRequest, game, req.user);
+  checkCanWithdraw(joinRequest, req.user);
 
   // A declined request has to stay, or the user could send another one.
   // An accepted one belongs to a player, and a player leaves the game.
   if (joinRequest.state !== "pending")
     throw new ConflictError("Only a pending join request can be withdrawn");
 
-  await JoinRequest.deleteOne({ _id: joinRequest._id });
+  await takeUserOutOfGame(game, joinRequest.user, req.user);
 
   res.status(StatusCodes.NO_CONTENT).send();
 };

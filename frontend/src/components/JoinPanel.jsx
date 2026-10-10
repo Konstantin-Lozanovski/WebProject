@@ -8,8 +8,8 @@ const STATE_BADGES = {
 };
 
 // What the person looking at a game sees about joining it: the way in
-// ("Log in to join" or "Request to join"), or the state of the join request
-// they already sent.
+// ("Log in to join" or "Request to join"), the state of the join request
+// they already sent, or the way out ("Leave game") once they are a player.
 // user is the logged-in user or null; joinRequest is their join request for
 // this game or null; isPlayer says whether they are a player in it.
 // working is true while an action is on its way, so it cannot be sent twice.
@@ -21,6 +21,7 @@ const JoinPanel = ({
   working,
   onSend,
   onWithdraw,
+  onLeave,
 }) => {
   const getRequestContent = () => {
     const badge = STATE_BADGES[joinRequest.state];
@@ -61,11 +62,42 @@ const JoinPanel = ({
     );
   };
 
+  // What a player other than the organizer sees: the way out
+  const getPlayerContent = () => {
+    // Leaving is allowed until one hour before the start. An admin is not
+    // held to that, on the server either.
+    const canLeave = user.isAdmin() || game.startsInMoreThanAnHour();
+
+    return (
+      <>
+        <span>You are a player in this game.</span>
+        {canLeave && (
+          <button
+            className="btn btn-outline-danger btn-sm"
+            type="button"
+            disabled={working}
+            onClick={onLeave}
+          >
+            Leave game
+          </button>
+        )}
+        {game.status === "upcoming" && !canLeave && (
+          <small className="text-muted">
+            You can no longer leave: the game starts in less than one hour.
+          </small>
+        )}
+      </>
+    );
+  };
+
   // Returns null when there is nothing to say about joining
   const getContent = () => {
+    if (isPlayer) {
+      // The organizer cannot leave their own game; they cancel it instead
+      if (game.isOrganizedBy(user)) return null;
+      return getPlayerContent();
+    }
     if (joinRequest) return getRequestContent();
-    // The organizer: a player who never sent a join request
-    if (isPlayer) return null;
     // Join requests are sent until the game starts
     if (game.status !== "upcoming") return null;
 

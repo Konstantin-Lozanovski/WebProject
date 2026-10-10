@@ -65,9 +65,18 @@ class Game {
     return user.isAdmin() || this.isOrganizedBy(user);
   }
 
-  // Withdrawing a join request is allowed until one hour before the start
+  // Withdrawing a join request, leaving and removing a player are allowed
+  // until one hour before the start
   startsInMoreThanAnHour() {
     return this.startTime.getTime() - Date.now() > HOUR;
+  }
+
+  // Who gets the Remove buttons: the organizer until one hour before the
+  // start, an admin always. The server checks the same rule again.
+  playersCanBeRemovedBy(user) {
+    if (!user) return false;
+    if (user.isAdmin()) return true;
+    return this.isOrganizedBy(user) && this.startsInMoreThanAnHour();
   }
 
   placesLeft() {

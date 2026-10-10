@@ -122,3 +122,10 @@ export const answerJoinRequest = async (gameId, requestId, state) => {
 export const withdrawJoinRequest = async (gameId, requestId) => {
   await axiosInstance.delete(`/games/${gameId}/join-requests/${requestId}`);
 };
+
+// DELETE /api/games/:gameId/players/:playerId
+// The one request behind both "Leave game" (the user's own player) and the
+// organizer's Remove (someone else's)
+export const deletePlayer = async (gameId, playerId) => {
+  await axiosInstance.delete(`/games/${gameId}/players/${playerId}`);
+};
