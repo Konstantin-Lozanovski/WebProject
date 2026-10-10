@@ -1,6 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import { UnauthenticatedError } from "../errors/index.js";
 import User from "../models/user.model.js";
+import { sendWelcomeEmail } from "../mail/mail.js";
 
 // The user as the client is allowed to see it: everything but the password
 export const toPublicUser = (user) => {
@@ -20,6 +21,9 @@ export const register = async (req, res) => {
   // The role is left out on purpose, so nobody can register as an admin
   const user = new User({ username, email, password });
   await user.save();
+
+  // No await: the response does not wait for the email
+  sendWelcomeEmail(user);
 
   const token = user.createJWT();
 

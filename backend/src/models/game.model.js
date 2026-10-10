@@ -15,6 +15,9 @@ export const CITIES = [
   "Veles",
   "Štip",
 ];
+// Every city of the app is in Macedonia, so "a day" always means a day there,
+// whatever the clock of the server says (in the cloud it is UTC)
+export const TIME_ZONE = "Europe/Skopje";
 // In minutes
 export const DURATIONS = [60, 90, 120];
 export const MIN_PLAYERS = 2;

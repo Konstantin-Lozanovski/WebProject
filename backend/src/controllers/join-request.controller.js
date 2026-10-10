@@ -7,6 +7,8 @@ import {
 import Game, { getStatus, findOverlappingGame } from "../models/game.model.js";
 import Player from "../models/player.model.js";
 import JoinRequest from "../models/join-request.model.js";
+import User from "../models/user.model.js";
+import { sendJoinRequestEmail, sendAcceptedEmail } from "../mail/mail.js";
 
 const HOUR = 60 * 60 * 1000;
 
@@ -77,6 +79,34 @@ const findReasonCannotJoin = async (game, userId, whoIs) => {
     return `it overlaps another game ${whoIs} a player in (${overlappingGame.sport} in ${overlappingGame.city})`;
 
   return null;
+};
+
+// The two functions below read the user an email goes to and hand it to the
+// mail module. They run after the action is already saved, so nothing in
+// them may fail it: an error is logged and the response stays as it was.
+// There is no await on the email itself, so the response does not wait for
+// the mail provider.
+
+// user is the one who sent the join request
+const tellOrganizerAboutJoinRequest = async (game, user) => {
+  try {
+    const organizer = await User.findById(game.organizer);
+    // The organizer is missing when their account was deleted
+    if (organizer) sendJoinRequestEmail(organizer, user, game);
+  } catch (error) {
+    console.error("Could not email the organizer:", error.message);
+  }
+};
+
+// The user is read again here because the join request holds only their
+// username: with the email populated there, it would go out in the answer
+const tellUserTheyAreIn = async (userId, game) => {
+  try {
+    const user = await User.findById(userId);
+    if (user) sendAcceptedEmail(user, game);
+  } catch (error) {
+    console.error("Could not email the accepted user:", error.message);
+  }
 };
 
 // GET /api/games/:gameId/join-requests
@@ -152,6 +182,8 @@ export const sendJoinRequest = async (req, res) => {
   }
   await joinRequest.populate("user", "username");
 
+  await tellOrganizerAboutJoinRequest(game, req.user);
+
   res
     .status(StatusCodes.CREATED)
     .json({ joinRequest: toPublicJoinRequest(joinRequest) });
@@ -183,6 +215,8 @@ const acceptJoinRequest = async (joinRequest, game) => {
   await joinRequest.save();
   // The team is left out, so the player starts unassigned
   await Player.create(userAndGame);
+
+  await tellUserTheyAreIn(joinRequest.user._id, game);
 };
 
 const declineJoinRequest = async (joinRequest) => {

@@ -17,3 +17,15 @@ export const JWT_SECRET = process.env.JWT_SECRET || "local-development-secret";
 
 // Fixed by the plan: a user stays logged in for a week
 export const JWT_LIFETIME = "7d";
+
+// The mail provider (Brevo). They are empty locally and in Docker, and
+// then every email is written to the server log instead of being sent.
+// MAIL_FROM is the sender the provider has verified, which is not the same
+// address as the MAIL_USER login.
+export const MAIL_HOST = process.env.MAIL_HOST || "";
+export const MAIL_USER = process.env.MAIL_USER || "";
+export const MAIL_PASS = process.env.MAIL_PASS || "";
+export const MAIL_FROM = process.env.MAIL_FROM || "";
+
+// Not the usual mail port 587: Render's free tier blocks 25, 465 and 587
+export const MAIL_PORT = process.env.MAIL_PORT || 2525;

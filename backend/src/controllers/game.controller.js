@@ -6,15 +6,13 @@ import {
 } from "../errors/index.js";
 import Game, {
   SPORTS,
+  TIME_ZONE,
   getStatus,
   findOverlappingGame,
   deleteGameWithItsDocuments,
 } from "../models/game.model.js";
 import Player from "../models/player.model.js";
-
-// Every city of the app is in Macedonia, so "a day" always means a day there,
-// whatever the clock of the server says (in the cloud it is UTC)
-export const TIME_ZONE = "Europe/Skopje";
+import { sendGameCancelledEmail } from "../mail/mail.js";
 
 // "+01:00" in winter and "+02:00" in summer: how far Macedonia is ahead of
 // UTC at the given moment
@@ -281,6 +279,36 @@ export const updateGame = async (req, res) => {
   res.status(StatusCodes.OK).json({ game: toPublicGame(game, players.length) });
 };
 
+// Deletes the game and tells its players by email that it was cancelled.
+// usersNotToTell are the users who already know: the one who asked for it,
+// and the organizer when the game goes because their account was deleted.
+export const deleteGameAndTellPlayers = async (game, usersNotToTell) => {
+  // Read before the delete, because the delete takes the players with it
+  const players = await Player.find({ game: game._id }).populate(
+    "user",
+    "username email",
+  );
+  // Worked out before the delete too, so it is clear it describes the game
+  // as it was. A game that already started was not cancelled for anyone: an
+  // admin deleting it is only cleaning up.
+  const wasUpcoming = getStatus(game) === "upcoming";
+
+  await deleteGameWithItsDocuments(game);
+
+  if (!wasUpcoming) return;
+
+  for (const player of players) {
+    // The user is missing when their account was deleted
+    if (!player.user) continue;
+
+    const alreadyKnows = usersNotToTell.some((user) => {
+      return user._id.equals(player.user._id);
+    });
+    // No await on the email: the response does not wait for it
+    if (!alreadyKnows) sendGameCancelledEmail(player.user, game);
+  }
+};
+
 // DELETE /api/games/:id
 // For the organizer this is cancelling the game; for an admin, deleting it
 export const deleteGame = async (req, res) => {
@@ -288,7 +316,7 @@ export const deleteGame = async (req, res) => {
   if (!game) throw new NotFoundError("Game not found");
   checkCanChangeGame(game, req.user);
 
-  await deleteGameWithItsDocuments(game);
+  await deleteGameAndTellPlayers(game, [req.user]);
 
   res.status(StatusCodes.NO_CONTENT).send();
 };

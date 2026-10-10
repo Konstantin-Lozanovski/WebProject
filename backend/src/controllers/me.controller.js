@@ -1,12 +1,8 @@
 import { StatusCodes } from "http-status-codes";
-import Game, { getStatus } from "../models/game.model.js";
+import Game, { TIME_ZONE, getStatus } from "../models/game.model.js";
 import Player from "../models/player.model.js";
 import JoinRequest from "../models/join-request.model.js";
-import {
-  TIME_ZONE,
-  toPublicGame,
-  countPlayersByGame,
-} from "./game.controller.js";
+import { toPublicGame, countPlayersByGame } from "./game.controller.js";
 import { toPublicJoinRequest } from "./join-request.controller.js";
 
 // How many months the my-games-per-month chart goes back, this month included

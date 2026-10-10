@@ -1,10 +1,11 @@
 import { StatusCodes } from "http-status-codes";
 import { NotFoundError, ConflictError } from "../errors/index.js";
 import User from "../models/user.model.js";
-import Game, { deleteGameWithItsDocuments } from "../models/game.model.js";
+import Game from "../models/game.model.js";
 import Player from "../models/player.model.js";
 import JoinRequest from "../models/join-request.model.js";
 import { toPublicUser } from "./auth.controller.js";
+import { deleteGameAndTellPlayers } from "./game.controller.js";
 
 // Every route here is for admins only; the router checks that before any
 // of these functions runs
@@ -41,7 +42,8 @@ export const updateUserRole = async (req, res) => {
 
 // A game cannot go on without its organizer, so the upcoming games of the
 // user are cancelled. The ones that already started stay as history.
-const deleteUpcomingGamesOrganizedBy = async (user) => {
+// admin is the one deleting the user.
+const deleteUpcomingGamesOrganizedBy = async (user, admin) => {
   // Upcoming means "has not started yet", the same rule getStatus uses
   const games = await Game.find({
     organizer: user._id,
@@ -49,7 +51,9 @@ const deleteUpcomingGamesOrganizedBy = async (user) => {
   });
 
   for (const game of games) {
-    await deleteGameWithItsDocuments(game);
+    // Neither of the two needs the email: the admin did it, and the
+    // organizer's account is about to be gone
+    await deleteGameAndTellPlayers(game, [admin, user]);
   }
 };
 
@@ -80,7 +84,7 @@ export const deleteUser = async (req, res) => {
   // fails, the user is still in the list and deleting them again finishes
   // the job. The other order could leave an upcoming game without an
   // organizer and nobody to delete.
-  await deleteUpcomingGamesOrganizedBy(user);
+  await deleteUpcomingGamesOrganizedBy(user, req.user);
   // All of them, whatever their state and the status of their game: a join
   // request is only ever shown to the user who sent it and to the organizer
   // who answers it
