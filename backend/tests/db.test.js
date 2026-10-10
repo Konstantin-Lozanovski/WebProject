@@ -88,7 +88,13 @@ test("seeding a second time gives the same data, without what was added in betwe
   const body = await response.json();
 
   assert.equal(response.status, 201);
-  assert.deepEqual(body.counts, { users: 7, games: 9, players: 9 });
+  // 20 players: the 9 organizers and the users of the 11 accepted join requests
+  assert.deepEqual(body.counts, {
+    users: 7,
+    games: 9,
+    joinRequests: 19,
+    players: 20,
+  });
 
   const extraLogin = await login("extra@example.com", "football1");
   const adminLogin = await login("admin@example.com", "admin1234");

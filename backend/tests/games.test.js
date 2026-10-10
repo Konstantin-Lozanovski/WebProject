@@ -774,13 +774,11 @@ test("the three game routes are in the OpenAPI file", async () => {
   assert.ok(body.paths["/api/games/{id}"].get);
 });
 
-test("seeded games cover every status, sport and city, each with its organizer as a player", async () => {
+test("seeded games cover every status, sport and city, each with its organizer as its first player", async () => {
   // The seed empties the database, so this test stays the last one
   const seed = await post("/api/db/seed");
-  const seedBody = await seed.json();
 
   assert.equal(seed.status, 201);
-  assert.equal(seedBody.counts.players, seedBody.counts.games);
 
   // The list only shows upcoming games, and no route lists the others yet,
   // so the test reads the ids itself and opens every game through the API
@@ -789,7 +787,6 @@ test("seeded games cover every status, sport and city, each with its organizer a
   for (const id of ids) {
     const response = await get(`/api/games/${id}`);
     const body = await response.json();
-    assert.equal(body.players.length, 1);
     assert.equal(body.players[0].user.username, body.game.organizer.username);
     games.push(body.game);
   }

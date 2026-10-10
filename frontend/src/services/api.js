@@ -2,6 +2,7 @@ import axiosInstance from "./axiosInstance.js";
 import User from "../models/User.js";
 import Game from "../models/Game.js";
 import Player from "../models/Player.js";
+import JoinRequest from "../models/JoinRequest.js";
 
 // GET /api/status
 export const fetchStatus = async () => {
@@ -81,4 +82,43 @@ export const updateGame = async (gameId, gameData) => {
 // DELETE /api/games/:id
 export const deleteGame = async (gameId) => {
   await axiosInstance.delete(`/games/${gameId}`);
+};
+
+// GET /api/games/:gameId/join-requests
+// Only the game's organizer and admins may ask for this
+export const fetchPendingJoinRequests = async (gameId) => {
+  const response = await axiosInstance.get(`/games/${gameId}/join-requests`);
+  return response.data.joinRequests.map((joinRequest) => {
+    return new JoinRequest(joinRequest);
+  });
+};
+
+// GET /api/games/:gameId/join-requests/mine
+// Returns null when the logged-in user has no join request for the game
+export const fetchMyJoinRequest = async (gameId) => {
+  const response = await axiosInstance.get(`/games/${gameId}/join-requests/mine`);
+  const joinRequest = response.data.joinRequest;
+  return joinRequest ? new JoinRequest(joinRequest) : null;
+};
+
+// POST /api/games/:gameId/join-requests
+// No body: the server takes the user from the token and the game from the address
+export const sendJoinRequest = async (gameId) => {
+  const response = await axiosInstance.post(`/games/${gameId}/join-requests`);
+  return new JoinRequest(response.data.joinRequest);
+};
+
+// PUT /api/games/:gameId/join-requests/:requestId
+// state is the answer: "accepted" or "declined"
+export const answerJoinRequest = async (gameId, requestId, state) => {
+  const response = await axiosInstance.put(
+    `/games/${gameId}/join-requests/${requestId}`,
+    { state },
+  );
+  return new JoinRequest(response.data.joinRequest);
+};
+
+// DELETE /api/games/:gameId/join-requests/:requestId
+export const withdrawJoinRequest = async (gameId, requestId) => {
+  await axiosInstance.delete(`/games/${gameId}/join-requests/${requestId}`);
 };

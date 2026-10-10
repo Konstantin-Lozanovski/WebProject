@@ -1,8 +1,18 @@
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import Modal from "../components/Modal.jsx";
-import { fetchGame, deleteGame } from "../services/api.js";
-import { formatTime, formatPlaces } from "../services/helpers.js";
+import JoinPanel from "../components/JoinPanel.jsx";
+import PendingJoinRequests from "../components/PendingJoinRequests.jsx";
+import {
+  fetchGame,
+  deleteGame,
+  fetchMyJoinRequest,
+  fetchPendingJoinRequests,
+  sendJoinRequest,
+  answerJoinRequest,
+  withdrawJoinRequest,
+} from "../services/api.js";
+import { formatDateTime, formatPlaces } from "../services/helpers.js";
 
 // How each status is shown: its text and the Bootstrap colour of its badge
 const STATUS_BADGES = {
@@ -11,15 +21,29 @@ const STATUS_BADGES = {
   finished: { label: "Finished", variant: "secondary" },
 };
 
-// "Sat, 10 Oct 2026, 18:00"
-const formatDateTime = (date) => {
-  const day = date.toLocaleDateString("en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-  return `${day}, ${formatTime(date)}`;
+// Asks the API for everything the page shows to this user (null for a
+// guest). Not every user may ask for every part: a guest has no join
+// request of their own, and only the organizer and admins get the pending
+// ones. Asking anyway would be answered with 401 or 403.
+const loadGamePage = async (id, user) => {
+  const data = await fetchGame(id);
+
+  let myJoinRequest = null;
+  if (user) {
+    myJoinRequest = await fetchMyJoinRequest(id);
+  }
+
+  let pendingJoinRequests = [];
+  if (data.game.showsJoinRequestsTo(user)) {
+    pendingJoinRequests = await fetchPendingJoinRequests(id);
+  }
+
+  return {
+    game: data.game,
+    players: data.players,
+    myJoinRequest,
+    pendingJoinRequests,
+  };
 };
 
 // user is the logged-in user, or null for a guest
@@ -38,6 +62,22 @@ const GamePage = ({ user }) => {
   const [cancelError, setCancelError] = useState("");
   // True while the cancel request is on its way, so it cannot be sent twice
   const [cancelling, setCancelling] = useState(false);
+  // The logged-in user's own join request for this game, or null
+  const [myJoinRequest, setMyJoinRequest] = useState(null);
+  // Stays empty for everyone but the organizer and admins
+  const [pendingJoinRequests, setPendingJoinRequests] = useState([]);
+  const [joinError, setJoinError] = useState("");
+  // True while a join request action is on its way
+  const [working, setWorking] = useState(false);
+  // The join request waiting in the "Decline?" popup, or null
+  const [joinRequestToDecline, setJoinRequestToDecline] = useState(null);
+
+  const showPage = (page) => {
+    setGame(page.game);
+    setPlayers(page.players);
+    setMyJoinRequest(page.myJoinRequest);
+    setPendingJoinRequests(page.pendingJoinRequests);
+  };
 
   useEffect(() => {
     const getGame = async () => {
@@ -45,9 +85,8 @@ const GamePage = ({ user }) => {
       setLoadError("");
 
       try {
-        const data = await fetchGame(id);
-        setGame(data.game);
-        setPlayers(data.players);
+        const page = await loadGamePage(id, user);
+        showPage(page);
       } catch (error) {
         console.error("Error fetching the game:", error);
         const status = error.response ? error.response.status : null;
@@ -65,8 +104,9 @@ const GamePage = ({ user }) => {
 
     getGame();
     // Runs again when the id changes, so moving from one game's address
-    // to another's loads the other game
-  }, [id]);
+    // to another's loads the other game, and when the user changes, because
+    // logging out changes what the page may show
+  }, [id, user]);
 
   const handleCancelGame = async () => {
     setConfirmingCancel(false);
@@ -83,6 +123,53 @@ const GamePage = ({ user }) => {
       setCancelError(data ? data.msg : "The server could not be reached");
       setCancelling(false);
     }
+  };
+
+  // Every join request action goes through here: it runs the action, then
+  // loads the page again, because one action can change the places left,
+  // the players and both kinds of join requests at once.
+  // action is a function that sends the request to the API.
+  const runJoinAction = async (action) => {
+    setJoinError("");
+    setWorking(true);
+
+    try {
+      await action();
+    } catch (error) {
+      console.error("Error changing a join request:", error);
+      const data = error.response ? error.response.data : null;
+      // The server's message says which rule refused it (full, overlap, ...)
+      setJoinError(data ? data.msg : "The server could not be reached");
+    }
+
+    // Also after a refused action: a refusal usually means the page was
+    // out of date (the game became full, the join request was withdrawn)
+    try {
+      const page = await loadGamePage(id, user);
+      showPage(page);
+    } catch (error) {
+      console.error("Error fetching the game:", error);
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const handleSendJoinRequest = () => {
+    runJoinAction(() => sendJoinRequest(id));
+  };
+
+  const handleWithdrawJoinRequest = () => {
+    runJoinAction(() => withdrawJoinRequest(id, myJoinRequest._id));
+  };
+
+  const handleAcceptJoinRequest = (joinRequest) => {
+    runJoinAction(() => answerJoinRequest(id, joinRequest._id, "accepted"));
+  };
+
+  const handleDeclineJoinRequest = () => {
+    const joinRequest = joinRequestToDecline;
+    setJoinRequestToDecline(null);
+    runJoinAction(() => answerJoinRequest(id, joinRequest._id, "declined"));
   };
 
   if (loading) return <p className="text-center py-5">Loading...</p>;
@@ -105,6 +192,11 @@ const GamePage = ({ user }) => {
     if (!game.organizer || !player.user) return false;
     return player.user._id === game.organizer._id;
   };
+
+  // A guest is never a player; a player whose account was deleted has no user
+  const isPlayer = players.some((player) => {
+    return user && player.user && player.user._id === user._id;
+  });
 
   return (
     <div className="container py-4">
@@ -136,6 +228,17 @@ const GamePage = ({ user }) => {
       </div>
 
       {cancelError && <div className="alert alert-danger">{cancelError}</div>}
+      {joinError && <div className="alert alert-danger">{joinError}</div>}
+
+      <JoinPanel
+        user={user}
+        game={game}
+        isPlayer={isPlayer}
+        joinRequest={myJoinRequest}
+        working={working}
+        onSend={handleSendJoinRequest}
+        onWithdraw={handleWithdrawJoinRequest}
+      />
 
       <div className="row g-4">
         <div className="col-12 col-md-7">
@@ -190,6 +293,32 @@ const GamePage = ({ user }) => {
           </div>
         </div>
       </div>
+
+      {game.showsJoinRequestsTo(user) && (
+        <div className="row mt-4">
+          <div className="col-12 col-lg-6">
+            <PendingJoinRequests
+              joinRequests={pendingJoinRequests}
+              canAnswer={game.canBeChangedBy(user)}
+              working={working}
+              onAccept={handleAcceptJoinRequest}
+              onDecline={setJoinRequestToDecline}
+            />
+          </div>
+        </div>
+      )}
+
+      {joinRequestToDecline && (
+        <Modal
+          title="Decline this join request?"
+          text={`${joinRequestToDecline.username()} will not be able to send another join request to this game. This cannot be undone.`}
+          confirmLabel="Decline"
+          cancelLabel="Go back"
+          confirmVariant="danger"
+          onConfirm={handleDeclineJoinRequest}
+          onClose={() => setJoinRequestToDecline(null)}
+        />
+      )}
 
       {confirmingCancel && (
         <Modal

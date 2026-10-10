@@ -20,11 +20,15 @@ const CONFIRMATIONS = {
   },
 };
 
+// The names in the server's answer are the names of the collections. This
+// holds the ones that read badly as they are.
+const COUNT_LABELS = { joinRequests: "join requests" };
+
 // Turns { users: 7 } into "7 users"
 const describeCounts = (counts) => {
   const parts = [];
   for (const name of Object.keys(counts)) {
-    parts.push(`${counts[name]} ${name}`);
+    parts.push(`${counts[name]} ${COUNT_LABELS[name] || name}`);
   }
   return parts.join(", ");
 };

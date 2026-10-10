@@ -78,6 +78,22 @@ const options = {
             createdAt: { type: "string", format: "date-time" },
           },
         },
+        JoinRequest: {
+          type: "object",
+          properties: {
+            _id: { type: "string", example: "66f1c0a4e3b2a1d4c5f6a7bb" },
+            user: {
+              type: "object",
+              properties: {
+                _id: { type: "string", example: "66f1c0a4e3b2a1d4c5f6a7b8" },
+                username: { type: "string", example: "marko_7" },
+              },
+            },
+            game: { type: "string", example: "66f1c0a4e3b2a1d4c5f6a7b9" },
+            state: { type: "string", enum: ["pending", "accepted", "declined"] },
+            createdAt: { type: "string", format: "date-time" },
+          },
+        },
         AuthResponse: {
           type: "object",
           properties: {

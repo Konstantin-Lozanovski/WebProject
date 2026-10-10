@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import User from "../models/user.model.js";
 import Game from "../models/game.model.js";
 import Player from "../models/player.model.js";
+import JoinRequest from "../models/join-request.model.js";
 
 // The demo logins. They are known on purpose, so anyone testing the app
 // can log in as each role.
@@ -28,7 +29,9 @@ const HOUR = 60 * 60 * 1000;
 // startsInHours is counted from the moment of seeding (negative means the
 // game has already started), so the demo data always has games in every
 // status, whenever the seed is run. The organizer is given by username.
-// No organizer has two games that overlap.
+// joinRequests are the join requests the game starts with: who sent each one
+// and its state. An accepted one also makes that user a player.
+// No user is a player in two games that overlap.
 const DEMO_GAMES = [
   // Finished
   {
@@ -40,6 +43,10 @@ const DEMO_GAMES = [
     duration: 90,
     maxPlayers: 10,
     notes: "Thanks for coming, same time next week?",
+    joinRequests: [
+      { user: "sara_b", state: "accepted" },
+      { user: "ivan_t", state: "accepted" },
+    ],
   },
   {
     organizer: "sara_b",
@@ -49,6 +56,7 @@ const DEMO_GAMES = [
     startsInHours: -26,
     duration: 60,
     maxPlayers: 6,
+    joinRequests: [{ user: "ana_s", state: "accepted" }],
   },
   // In progress: it started less than 90 minutes ago and lasts 120
   {
@@ -60,6 +68,10 @@ const DEMO_GAMES = [
     duration: 120,
     maxPlayers: 12,
     notes: "Indoor shoes only.",
+    joinRequests: [
+      { user: "elena_k", state: "accepted" },
+      { user: "david_m", state: "accepted" },
+    ],
   },
   // Upcoming
   {
@@ -71,6 +83,13 @@ const DEMO_GAMES = [
     duration: 90,
     maxPlayers: 10,
     notes: "Bring a white and a dark shirt. We split the pitch fee after the game.",
+    joinRequests: [
+      { user: "ivan_t", state: "accepted" },
+      { user: "sara_b", state: "accepted" },
+      { user: "elena_k", state: "accepted" },
+      { user: "ana_s", state: "pending" },
+      { user: "david_m", state: "pending" },
+    ],
   },
   {
     organizer: "ana_s",
@@ -80,6 +99,11 @@ const DEMO_GAMES = [
     startsInHours: 24,
     duration: 60,
     maxPlayers: 6,
+    joinRequests: [
+      { user: "marko_p", state: "accepted" },
+      { user: "ivan_t", state: "declined" },
+      { user: "elena_k", state: "pending" },
+    ],
   },
   {
     organizer: "elena_k",
@@ -90,6 +114,10 @@ const DEMO_GAMES = [
     duration: 90,
     maxPlayers: 4,
     notes: "Rackets can be rented at the club.",
+    joinRequests: [
+      { user: "david_m", state: "accepted" },
+      { user: "sara_b", state: "pending" },
+    ],
   },
   {
     organizer: "elena_k",
@@ -99,7 +127,14 @@ const DEMO_GAMES = [
     startsInHours: 96,
     duration: 120,
     maxPlayers: 12,
+    joinRequests: [
+      { user: "marko_p", state: "declined" },
+      { user: "ana_s", state: "pending" },
+    ],
   },
+  // The full game: the organizer and one accepted player fill both places.
+  // The pending join request was sent before that, so accepting it now is
+  // refused.
   {
     organizer: "david_m",
     sport: "Tennis",
@@ -108,6 +143,10 @@ const DEMO_GAMES = [
     startsInHours: 7 * 24,
     duration: 60,
     maxPlayers: 2,
+    joinRequests: [
+      { user: "ana_s", state: "accepted" },
+      { user: "marko_p", state: "pending" },
+    ],
   },
   // Too far ahead for a weather forecast
   {
@@ -118,6 +157,7 @@ const DEMO_GAMES = [
     startsInHours: 20 * 24,
     duration: 90,
     maxPlayers: 14,
+    joinRequests: [],
   },
 ];
 
@@ -171,13 +211,41 @@ const seedGames = async (users) => {
   return games;
 };
 
-// Every game gets its organizer as its first player, unassigned
-const seedOrganizerPlayers = async (games) => {
+// games holds the saved games in the order of DEMO_GAMES, so the game at
+// one position belongs to the demo game at the same position
+const seedJoinRequests = async (users, games) => {
+  const joinRequests = [];
+
+  for (let i = 0; i < games.length; i++) {
+    for (const demoJoinRequest of DEMO_GAMES[i].joinRequests) {
+      const user = users.find((user) => user.username === demoJoinRequest.user);
+
+      joinRequests.push({
+        user: user._id,
+        game: games[i]._id,
+        state: demoJoinRequest.state,
+      });
+    }
+  }
+
+  return JoinRequest.create(joinRequests);
+};
+
+// Every game gets its organizer as its first player, and then the user of
+// each accepted join request. All of them start unassigned.
+const seedPlayers = async (games, joinRequests) => {
   const players = games.map((game) => {
     return { user: game.organizer, game: game._id };
   });
 
-  return Player.create(players);
+  for (const joinRequest of joinRequests) {
+    if (joinRequest.state !== "accepted") continue;
+    players.push({ user: joinRequest.user, game: joinRequest.game });
+  }
+
+  // ordered makes create save them one after another, so the organizer of
+  // a game is also its oldest player and stays first in the list
+  return Player.create(players, { ordered: true });
 };
 
 // Clears first, so seeding twice gives the same data and not two copies.
@@ -189,7 +257,13 @@ export const seedDatabase = async () => {
 
   const users = await seedUsers();
   const games = await seedGames(users);
-  const players = await seedOrganizerPlayers(games);
+  const joinRequests = await seedJoinRequests(users, games);
+  const players = await seedPlayers(games, joinRequests);
 
-  return { users: users.length, games: games.length, players: players.length };
+  return {
+    users: users.length,
+    games: games.length,
+    joinRequests: joinRequests.length,
+    players: players.length,
+  };
 };

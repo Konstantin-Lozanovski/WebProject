@@ -16,6 +16,8 @@ export const DURATIONS = [60, 90, 120];
 // Even numbers only, because the players are split into two equal teams
 export const MAX_PLAYERS_OPTIONS = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22];
 
+const HOUR = 60 * 60 * 1000;
+
 // Mirrors the game the API returns
 class Game {
   constructor(data) {
@@ -54,6 +56,18 @@ class Game {
     if (!user) return false;
     if (user.isAdmin()) return true;
     return this.isOrganizedBy(user) && this.status === "upcoming";
+  }
+
+  // Who gets the list of pending join requests: the organizer and admins.
+  // The Accept and Decline buttons follow canBeChangedBy, like Edit and Cancel.
+  showsJoinRequestsTo(user) {
+    if (!user) return false;
+    return user.isAdmin() || this.isOrganizedBy(user);
+  }
+
+  // Withdrawing a join request is allowed until one hour before the start
+  startsInMoreThanAnHour() {
+    return this.startTime.getTime() - Date.now() > HOUR;
   }
 
   placesLeft() {
