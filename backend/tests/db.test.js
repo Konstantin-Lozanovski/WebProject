@@ -94,6 +94,7 @@ test("seeding a second time gives the same data, without what was added in betwe
     games: 9,
     joinRequests: 19,
     players: 20,
+    messages: 11,
   });
 
   const extraLogin = await login("extra@example.com", "football1");
@@ -126,6 +127,45 @@ test("seeding places players on Team A, on Team B and unassigned, and no team ov
   assert.ok(seenTeams.includes("A"));
   assert.ok(seenTeams.includes("B"));
   assert.ok(seenTeams.includes("unassigned"));
+});
+
+test("seeding adds messages to a few games, each posted by a player of that game, oldest first", async () => {
+  const seed = await post("/api/db/seed");
+  assert.equal(seed.status, 201);
+
+  // An admin reads every chat
+  const adminLogin = await login("admin@example.com", "admin1234");
+  const headers = { Authorization: `Bearer ${(await adminLogin.json()).token}` };
+
+  const list = await fetch(`${baseUrl}/api/games`);
+  const games = (await list.json()).games;
+  let gamesWithMessages = 0;
+
+  for (const game of games) {
+    const gamePage = await fetch(`${baseUrl}/api/games/${game._id}`);
+    const players = (await gamePage.json()).players;
+    const playerNames = players.map((player) => player.user.username);
+
+    const chat = await fetch(`${baseUrl}/api/games/${game._id}/messages`, { headers });
+    assert.equal(chat.status, 200);
+    const messages = (await chat.json()).messages;
+    if (messages.length > 0) gamesWithMessages = gamesWithMessages + 1;
+
+    for (const message of messages) {
+      assert.ok(playerNames.includes(message.user.username), message.text);
+      // Posted in the past, so the chat shows "3 hours ago" and not "just now"
+      assert.ok(new Date(message.createdAt) < new Date(), message.text);
+    }
+
+    const times = messages.map((message) => message.createdAt);
+    // ISO dates sort like text, so a sorted copy equal to the list means
+    // the list is oldest first
+    assert.deepEqual(times, [...times].sort());
+  }
+
+  // Only the upcoming games are listed; the finished one and the one in
+  // progress have messages too
+  assert.equal(gamesWithMessages, 2);
 });
 
 test("deleting all data after a seed leaves no demo account to log in with", async () => {

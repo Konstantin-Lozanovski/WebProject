@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Player from "./player.model.js";
 import JoinRequest from "./join-request.model.js";
+import Message from "./message.model.js";
 
 // Exported so the request validation checks the same rules as the schema
 export const SPORTS = ["Football", "Basketball", "Volleyball", "Tennis", "Padel"];
@@ -151,6 +152,7 @@ export const deleteGameWithItsDocuments = async (game) => {
   await Game.deleteOne({ _id: game._id });
   await Player.deleteMany({ game: game._id });
   await JoinRequest.deleteMany({ game: game._id });
+  await Message.deleteMany({ game: game._id });
 };
 
 export default Game;

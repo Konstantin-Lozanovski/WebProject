@@ -3,6 +3,7 @@ import User from "../models/user.model.js";
 import Game from "../models/game.model.js";
 import Player from "../models/player.model.js";
 import JoinRequest from "../models/join-request.model.js";
+import Message from "../models/message.model.js";
 
 // The demo logins. They are known on purpose, so anyone testing the app
 // can log in as each role.
@@ -24,7 +25,8 @@ const DEMO_USERS = [
   { username: "ana_s", email: "ana@example.com", password: USER_PASSWORD },
 ];
 
-const HOUR = 60 * 60 * 1000;
+const MINUTE = 60 * 1000;
+const HOUR = 60 * MINUTE;
 
 // startsInHours is counted from the moment of seeding (negative means the
 // game has already started), so the demo data always has games in every
@@ -33,6 +35,9 @@ const HOUR = 60 * 60 * 1000;
 // and its state. An accepted one also makes that user a player.
 // organizerTeam and the team of an accepted join request say which team
 // that player is on: "A" or "B". Without one the player is unassigned.
+// messages are the game's chat, oldest first: which player posted each one
+// and how many minutes before the moment of seeding. A game without them
+// starts with an empty chat.
 // No user is a player in two games that overlap.
 const DEMO_GAMES = [
   // Finished
@@ -49,6 +54,13 @@ const DEMO_GAMES = [
     joinRequests: [
       { user: "sara_b", state: "accepted", team: "B" },
       { user: "ivan_t", state: "accepted", team: "A" },
+    ],
+    messages: [
+      // The game started between 72 and 73 hours ago: the second message is
+      // from just before that, the last one from after the game ended
+      { user: "marko_p", minutesAgo: 80 * 60, text: "Pitch 2 is booked, please be on time." },
+      { user: "ivan_t", minutesAgo: 73 * 60 + 10, text: "I am a few minutes late, start without me." },
+      { user: "sara_b", minutesAgo: 70 * 60, text: "Good game everyone!" },
     ],
   },
   {
@@ -77,6 +89,10 @@ const DEMO_GAMES = [
       { user: "elena_k", state: "accepted", team: "B" },
       { user: "david_m", state: "accepted" },
     ],
+    messages: [
+      { user: "ivan_t", minutesAgo: 120, text: "The hall opens half an hour before we start." },
+      { user: "david_m", minutesAgo: 20, text: "Stuck in traffic, I will be there in 10 minutes." },
+    ],
   },
   // Upcoming. The first one has players on Team A, on Team B and unassigned.
   {
@@ -95,6 +111,12 @@ const DEMO_GAMES = [
       { user: "elena_k", state: "accepted" },
       { user: "ana_s", state: "pending" },
       { user: "david_m", state: "pending" },
+    ],
+    messages: [
+      { user: "marko_p", minutesAgo: 180, text: "Pitch is booked from 18:00. Please be there 10 minutes early." },
+      { user: "ivan_t", minutesAgo: 120, text: "I can bring a ball and a pump." },
+      { user: "sara_b", minutesAgo: 40, text: "Is there parking next to the pitch?" },
+      { user: "marko_p", minutesAgo: 35, text: "Yes, the big one in front of the main entrance is free." },
     ],
   },
   {
@@ -124,6 +146,10 @@ const DEMO_GAMES = [
     joinRequests: [
       { user: "david_m", state: "accepted", team: "B" },
       { user: "sara_b", state: "pending" },
+    ],
+    messages: [
+      { user: "elena_k", minutesAgo: 26 * 60, text: "We still need two more players, tell your friends." },
+      { user: "david_m", minutesAgo: 5, text: "I asked a colleague, he will send a join request." },
     ],
   },
   {
@@ -272,6 +298,31 @@ const seedPlayers = async (users, games) => {
   return Player.create(players, { ordered: true });
 };
 
+// The chat of each game that has one in DEMO_GAMES
+const seedMessages = async (users, games) => {
+  const messages = [];
+
+  for (let i = 0; i < games.length; i++) {
+    // A demo game without messages has no such field at all
+    const demoMessages = DEMO_GAMES[i].messages || [];
+
+    for (const demoMessage of demoMessages) {
+      const user = users.find((user) => user.username === demoMessage.user);
+
+      messages.push({
+        user: user._id,
+        game: games[i]._id,
+        text: demoMessage.text,
+        // Mongoose only fills in createdAt when it is missing, so a message
+        // can be given a time in the past
+        createdAt: new Date(Date.now() - demoMessage.minutesAgo * MINUTE),
+      });
+    }
+  }
+
+  return Message.create(messages);
+};
+
 // Clears first, so seeding twice gives the same data and not two copies.
 // Each feature adds its own seed function above and one step here, in the
 // order the documents depend on each other. The answer says how many
@@ -283,11 +334,13 @@ export const seedDatabase = async () => {
   const games = await seedGames(users);
   const joinRequests = await seedJoinRequests(users, games);
   const players = await seedPlayers(users, games);
+  const messages = await seedMessages(users, games);
 
   return {
     users: users.length,
     games: games.length,
     joinRequests: joinRequests.length,
     players: players.length,
+    messages: messages.length,
   };
 };

@@ -4,6 +4,7 @@ import Modal from "../components/Modal.jsx";
 import JoinPanel from "../components/JoinPanel.jsx";
 import PendingJoinRequests from "../components/PendingJoinRequests.jsx";
 import Teams from "../components/Teams.jsx";
+import Chat from "../components/Chat.jsx";
 import {
   fetchGame,
   deleteGame,
@@ -255,6 +256,9 @@ const GamePage = ({ user }) => {
   }
 
   const badge = STATUS_BADGES[game.status];
+  // The chat is for the game's players; an admin reads every chat
+  const isPlayer = myPlayer !== undefined;
+  const showsChat = isPlayer || (user !== null && user.isAdmin());
 
   return (
     <div className="container py-4">
@@ -291,7 +295,7 @@ const GamePage = ({ user }) => {
       <JoinPanel
         user={user}
         game={game}
-        isPlayer={myPlayer !== undefined}
+        isPlayer={isPlayer}
         joinRequest={myJoinRequest}
         working={working}
         onSend={handleSendJoinRequest}
@@ -356,6 +360,14 @@ const GamePage = ({ user }) => {
               onAccept={handleAcceptJoinRequest}
               onDecline={setJoinRequestToDecline}
             />
+          </div>
+        </div>
+      )}
+
+      {showsChat && (
+        <div className="row mt-4">
+          <div className="col-12 col-lg-7">
+            <Chat gameId={id} user={user} canPost={isPlayer} />
           </div>
         </div>
       )}

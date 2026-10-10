@@ -3,6 +3,7 @@ import User from "../models/User.js";
 import Game from "../models/Game.js";
 import Player from "../models/Player.js";
 import JoinRequest from "../models/JoinRequest.js";
+import Message from "../models/Message.js";
 
 // GET /api/status
 export const fetchStatus = async () => {
@@ -139,4 +140,25 @@ export const updatePlayerTeam = async (gameId, playerId, team) => {
 // organizer's Remove (someone else's)
 export const deletePlayer = async (gameId, playerId) => {
   await axiosInstance.delete(`/games/${gameId}/players/${playerId}`);
+};
+
+// GET /api/games/:gameId/messages
+// The whole chat, oldest first. Only the game's players and admins may ask
+// for this.
+export const fetchMessages = async (gameId) => {
+  const response = await axiosInstance.get(`/games/${gameId}/messages`);
+  return response.data.messages.map((message) => new Message(message));
+};
+
+// POST /api/games/:gameId/messages
+export const postMessage = async (gameId, text) => {
+  const response = await axiosInstance.post(`/games/${gameId}/messages`, {
+    text,
+  });
+  return new Message(response.data.message);
+};
+
+// DELETE /api/games/:gameId/messages/:messageId
+export const deleteMessage = async (gameId, messageId) => {
+  await axiosInstance.delete(`/games/${gameId}/messages/${messageId}`);
 };
