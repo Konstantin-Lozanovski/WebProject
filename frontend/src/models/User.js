@@ -1,3 +1,10 @@
+// The closed set of roles, the same one the server checks.
+// It fills the role select, so only an allowed role can be chosen.
+export const ROLES = ["user", "admin"];
+
+// How each role is shown
+export const ROLE_LABELS = { user: "User", admin: "Admin" };
+
 // Mirrors the user document the API returns.
 // The password never leaves the server, so it is not here.
 class User {

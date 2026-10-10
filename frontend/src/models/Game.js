@@ -16,6 +16,16 @@ export const DURATIONS = [60, 90, 120];
 // Even numbers only, because the players are split into two equal teams
 export const MAX_PLAYERS_OPTIONS = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22];
 
+// The three statuses, in the order a game goes through them
+export const STATUSES = ["upcoming", "in progress", "finished"];
+
+// How each status is shown: its text and the Bootstrap colour of its badge
+export const STATUS_BADGES = {
+  upcoming: { label: "Upcoming", variant: "primary" },
+  "in progress": { label: "In progress", variant: "success" },
+  finished: { label: "Finished", variant: "secondary" },
+};
+
 const HOUR = 60 * 60 * 1000;
 
 // Mirrors the game the API returns

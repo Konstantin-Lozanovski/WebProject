@@ -3,7 +3,7 @@ import { UnauthenticatedError } from "../errors/index.js";
 import User from "../models/user.model.js";
 
 // The user as the client is allowed to see it: everything but the password
-const toPublicUser = (user) => {
+export const toPublicUser = (user) => {
   return {
     _id: user._id,
     username: user.username,

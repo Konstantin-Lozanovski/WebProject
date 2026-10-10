@@ -198,3 +198,41 @@ export const postMessage = async (gameId, text) => {
 export const deleteMessage = async (gameId, messageId) => {
   await axiosInstance.delete(`/games/${gameId}/messages/${messageId}`);
 };
+
+// GET /api/users
+// Every user of the app, oldest first. Only admins may ask for this.
+export const fetchUsers = async () => {
+  const response = await axiosInstance.get("/users");
+  return response.data.users.map((user) => new User(user));
+};
+
+// PUT /api/users/:id
+// role is "user" or "admin". Only admins may ask for this, and not for
+// themselves.
+export const updateUserRole = async (userId, role) => {
+  const response = await axiosInstance.put(`/users/${userId}`, { role });
+  return new User(response.data.user);
+};
+
+// DELETE /api/users/:id
+// Only admins may ask for this, and not for themselves
+export const deleteUser = async (userId) => {
+  await axiosInstance.delete(`/users/${userId}`);
+};
+
+// GET /api/admin/totals
+// Returns an object like { users: 10, games: { upcoming: 5, "in progress": 1,
+// finished: 3 }, joinRequests: { pending: 4, accepted: 44, declined: 2 } }.
+// Only admins may ask for this.
+export const fetchTotals = async () => {
+  const response = await axiosInstance.get("/admin/totals");
+  return response.data.totals;
+};
+
+// GET /api/admin/games
+// Every game at every status: the ones in progress first, then the upcoming
+// ones, then the finished ones. Only admins may ask for this.
+export const fetchAllGames = async () => {
+  const response = await axiosInstance.get("/admin/games");
+  return response.data.games.map((game) => new Game(game));
+};

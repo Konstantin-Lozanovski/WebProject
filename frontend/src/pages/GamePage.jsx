@@ -17,14 +17,8 @@ import {
   deletePlayer,
   updatePlayerTeam,
 } from "../services/api.js";
+import { STATUS_BADGES } from "../models/Game.js";
 import { formatDateTime, formatPlaces } from "../services/helpers.js";
-
-// How each status is shown: its text and the Bootstrap colour of its badge
-const STATUS_BADGES = {
-  upcoming: { label: "Upcoming", variant: "primary" },
-  "in progress": { label: "In progress", variant: "success" },
-  finished: { label: "Finished", variant: "secondary" },
-};
 
 // Asks the API for everything the page shows to this user (null for a
 // guest). Not every user may ask for every part: a guest has no join

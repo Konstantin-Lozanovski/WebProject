@@ -52,6 +52,11 @@ const Teams = ({
   // who is a player has "Leave game" for their own row.
   const showsRemoveFor = (player) => {
     if (!canRemove || isOrganizer(player)) return false;
+    // When the organizer's account was deleted, their player cannot be told
+    // apart from another deleted user's, and the server refuses to remove
+    // the organizer. So none of the "deleted user" rows of such a game gets
+    // the button.
+    if (!game.organizer && !player.user) return false;
     return !myPlayer || player._id !== myPlayer._id;
   };
 
