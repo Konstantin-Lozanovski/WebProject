@@ -52,6 +52,25 @@ const CONDITIONS = {
   99: "Thunderstorm with hail",
 };
 
+// The small picture shown next to the temperature. The codes come in groups
+// (the 50s and 60s are rain, the 70s are snow), so a few limits are enough
+// and not every code needs a line of its own. isDay is false at night,
+// when a clear sky is a moon and not a sun.
+const getIcon = (code, isDay) => {
+  // A code we have no text for gets no picture either
+  if (!CONDITIONS[code]) return "";
+
+  if (code <= 1) return isDay ? "☀️" : "🌙";
+  if (code === 2) return "⛅";
+  if (code === 3) return "☁️";
+  if (code <= 48) return "🌫️";
+  if (code <= 67) return "🌧️";
+  if (code <= 77) return "❄️";
+  if (code <= 82) return "🌧️";
+  if (code <= 86) return "❄️";
+  return "⛈️";
+};
+
 // "2026-10-10T16:00": the hour the date falls in, the way Open-Meteo wants
 // it. toISOString gives the time in UTC, which is also what Open-Meteo
 // reads the hour as when no time zone is sent.
@@ -69,7 +88,8 @@ export const fetchForecast = async (city, startTime) => {
     params: {
       latitude: coordinates.latitude,
       longitude: coordinates.longitude,
-      hourly: "temperature_2m,weather_code,wind_speed_10m,precipitation_probability",
+      hourly:
+        "temperature_2m,weather_code,wind_speed_10m,precipitation_probability,is_day",
       // The same hour as start and end, so the answer holds only that hour
       start_hour: hour,
       end_hour: hour,
@@ -88,6 +108,8 @@ export const fetchForecast = async (city, startTime) => {
     // In °C
     temperature: hourly.temperature_2m[0],
     description: CONDITIONS[hourly.weather_code[0]] || "Unknown conditions",
+    // is_day is 1 while the sun is up at that hour and 0 at night
+    icon: getIcon(hourly.weather_code[0], hourly.is_day[0] === 1),
     // In km/h
     windSpeed: hourly.wind_speed_10m[0],
     // In percent

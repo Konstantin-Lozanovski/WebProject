@@ -60,7 +60,13 @@ const Weather = ({ game }) => {
 
     return (
       <>
-        <p className="display-6 mb-1">{formatTemperature(forecast.temperature)}</p>
+        <p className="display-6 mb-1">
+          {/* Hidden from screen readers: the description below says the same */}
+          <span className="me-2" aria-hidden="true">
+            {forecast.icon}
+          </span>
+          {formatTemperature(forecast.temperature)}
+        </p>
         <p className="mb-1">{forecast.description}</p>
         {/* The far end of the forecast has a temperature but no rain chance */}
         {forecast.rainChance !== null && (

@@ -62,7 +62,7 @@ test("seeding creates an admin and several users who can log in with the demo pa
   const body = await response.json();
 
   assert.equal(response.status, 201);
-  assert.equal(body.counts.users, 7);
+  assert.equal(body.counts.users, 12);
 
   const adminLogin = await login("admin@example.com", "admin1234");
   const adminBody = await adminLogin.json();
@@ -88,12 +88,12 @@ test("seeding a second time gives the same data, without what was added in betwe
   const body = await response.json();
 
   assert.equal(response.status, 201);
-  // 28 players: the 12 organizers and the users of the 16 accepted join requests
+  // 131 players: the 36 organizers and the users of the 95 accepted join requests
   assert.deepEqual(body.counts, {
-    users: 7,
-    games: 12,
-    joinRequests: 24,
-    players: 28,
+    users: 12,
+    games: 36,
+    joinRequests: 109,
+    players: 131,
     messages: 11,
   });
 

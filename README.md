@@ -95,10 +95,15 @@ docker-compose logs backend
 | User | `elena_k` | `elena@example.com` | `football1` |
 | User | `david_m` | `david@example.com` | `football1` |
 | User | `ana_s` | `ana@example.com` | `football1` |
+| User | `nikola_d` | `nikola@example.com` | `football1` |
+| User | `maja_r` | `maja@example.com` | `football1` |
+| User | `stefan_g` | `stefan@example.com` | `football1` |
+| User | `teodora_v` | `teodora@example.com` | `football1` |
+| User | `filip_a` | `filip@example.com` | `football1` |
 
 `marko_p` is the best account to start with: he organizes the upcoming "Football in Skopje" game, which has players on Team A, on Team B and unassigned, two pending join requests and a chat. He also has finished games in several months, so his My games page shows the chart.
 
-The seed also creates 12 games: finished ones, one in progress, and upcoming ones (one of them full, one too far ahead for a weather forecast), with join requests in all three states and chat messages. The game times are counted from the moment of seeding, so there is always a game in progress, whenever the seed is run. Seeding again deletes everything first, so it always gives the same data.
+The seed also creates 36 games: finished ones spread over the last five months (so both charts have something to show, for every user), one in progress, and upcoming ones (one of them full, one too far ahead for a weather forecast), with join requests in all three states and chat messages. The game times are counted from the moment of seeding, so there is always a game in progress, whenever the seed is run. Seeding again deletes everything first, so it always gives the same data.
 
 ## The three types of users
 

@@ -65,11 +65,8 @@ const Navigation = ({ user, onLogout }) => {
                 </NavLink>
               </li>
             )}
-            <li className="nav-item">
-              <NavLink className="nav-link" to="/db">
-                Database
-              </NavLink>
-            </li>
+            {/* No link to /db on purpose: the page is opened by typing its
+                address, so a visitor does not find it by accident */}
           </ul>
           {user ? (
             <div className="d-flex align-items-center gap-2 py-2 py-lg-0">

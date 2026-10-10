@@ -221,7 +221,9 @@ const Home = ({ user }) => {
         <div className="row g-4">
           <div className="col-12 col-lg-8">{renderGames()}</div>
 
-          <div className="col-12 col-lg-4">{renderChart()}</div>
+          <div className="col-12 col-lg-4">
+            <div className="side-sticky">{renderChart()}</div>
+          </div>
         </div>
       </div>
     </>

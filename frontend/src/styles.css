@@ -248,6 +248,15 @@ h2 {
   padding-bottom: 3rem;
 }
 
+/* ---------- Chart beside a long list ---------- */
+/* The chart stays in view while the list next to it scrolls. The top leaves
+   room for the navigation, which is sticky too. On a phone the chart is
+   under the list, in a column only as tall as itself, so nothing sticks. */
+.side-sticky {
+  position: sticky;
+  top: 5rem;
+}
+
 /* ---------- Tiles with one number or fact ---------- */
 .stat {
   height: 100%;

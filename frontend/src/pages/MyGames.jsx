@@ -10,6 +10,7 @@ import {
   fetchMyJoinRequests,
   fetchMyMonthCounts,
 } from "../services/api.js";
+import { SPORT_BALLS } from "../models/Game.js";
 import { STATE_BADGES } from "../models/JoinRequest.js";
 import { formatDateTime } from "../services/helpers.js";
 
@@ -91,6 +92,28 @@ const MyGames = ({ user }) => {
     );
   };
 
+  const renderFinishedGameRow = (game) => {
+    return (
+      <tr key={game._id}>
+        <td>
+          {/* Empty alt: the link next to it already names the sport */}
+          <img className="game-ball me-2" src={SPORT_BALLS[game.sport]} alt="" />
+          <Link to={`/games/${game._id}`}>
+            {game.sport} in {game.city}
+          </Link>
+          {game.isOrganizedBy(user) && (
+            <span className="badge text-bg-dark ms-2">Organizer</span>
+          )}
+        </td>
+        <td>{game.venue}</td>
+        <td>{formatDateTime(game.startTime)}</td>
+        <td>
+          {game.playerCount} of {game.maxPlayers}
+        </td>
+      </tr>
+    );
+  };
+
   const renderFinishedGames = () => {
     if (finishedGames.length === 0) {
       return (
@@ -101,11 +124,21 @@ const MyGames = ({ user }) => {
       );
     }
 
+    // A table and not cards: a finished game has nothing left to do in it,
+    // and a long history stays short enough to read
     return (
-      <div className="mb-4">
-        {finishedGames.map((game) => (
-          <GameCard key={game._id} game={game} user={user} />
-        ))}
+      <div className="table-responsive mb-4">
+        <table className="table align-middle">
+          <thead>
+            <tr>
+              <th>Game</th>
+              <th>Venue</th>
+              <th>Start time</th>
+              <th>Players</th>
+            </tr>
+          </thead>
+          <tbody>{finishedGames.map(renderFinishedGameRow)}</tbody>
+        </table>
       </div>
     );
   };
@@ -240,7 +273,9 @@ const MyGames = ({ user }) => {
         <div className="row g-4">
           <div className="col-12 col-lg-8">{renderLists()}</div>
 
-          <div className="col-12 col-lg-4">{renderChart()}</div>
+          <div className="col-12 col-lg-4">
+            <div className="side-sticky">{renderChart()}</div>
+          </div>
         </div>
       </div>
     </>
