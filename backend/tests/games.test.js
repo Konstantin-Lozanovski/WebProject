@@ -128,13 +128,13 @@ const moveStartTime = async (game, startTime) => {
 };
 
 // Join requests are not built yet, so a second player can only get into a
-// game by being written to the database
-const addPlayer = async (game, username) => {
+// game by being written to the database. team is optional.
+const addPlayer = async (game, username, team = "unassigned") => {
   const user = await mongoose.connection.collection("users").findOne({ username });
   await mongoose.connection.collection("players").insertOne({
     user: user._id,
     game: new mongoose.Types.ObjectId(game._id),
-    team: "unassigned",
+    team,
     createdAt: new Date(),
     updatedAt: new Date(),
   });
@@ -626,6 +626,29 @@ test("lowering the max below the current number of players returns 409 with a cl
   const enough = await put(`/api/games/${game._id}`, changes(4), petarToken);
   assert.equal(enough.status, 200);
   assert.equal((await enough.json()).game.playerCount, 3);
+});
+
+test("lowering the max so far that a team no longer fits in its half returns 409", async () => {
+  const game = await createGameAs(petarToken, { startTime: fromNow(43 * DAY), maxPlayers: 10 });
+  await addPlayer(game, "sara_b", "A");
+  await addPlayer(game, "nina_k", "A");
+  await addPlayer(game, "marko_7", "A");
+  const changes = (maxPlayers) => validGame({ startTime: game.startTime, maxPlayers });
+
+  // 4 players fit in a max of 4, but Team A would have 2 spaces for its 3 players
+  const tooLow = await put(`/api/games/${game._id}`, changes(4), petarToken);
+  const body = await tooLow.json();
+  const asAdmin = await put(`/api/games/${game._id}`, changes(4), adminToken);
+
+  assert.equal(tooLow.status, 409);
+  assert.equal(body.msg, "Team A has 3 players, so the max cannot be lower than 6");
+  assert.equal(asAdmin.status, 409);
+
+  const gamePage = await get(`/api/games/${game._id}`);
+  assert.equal((await gamePage.json()).game.maxPlayers, 10);
+
+  const enough = await put(`/api/games/${game._id}`, changes(6), petarToken);
+  assert.equal(enough.status, 200);
 });
 
 test("moving a game onto another game of one of its players returns 409 and names the player", async () => {

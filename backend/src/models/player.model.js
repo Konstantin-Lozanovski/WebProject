@@ -17,7 +17,7 @@ const playerSchema = new mongoose.Schema(
     },
     team: {
       type: String,
-      enum: TEAMS,
+      enum: { values: TEAMS, message: "Team must be A, B or unassigned" },
       default: "unassigned",
     },
   },

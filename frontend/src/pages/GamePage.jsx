@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import Modal from "../components/Modal.jsx";
 import JoinPanel from "../components/JoinPanel.jsx";
 import PendingJoinRequests from "../components/PendingJoinRequests.jsx";
+import Teams from "../components/Teams.jsx";
 import {
   fetchGame,
   deleteGame,
@@ -12,6 +13,7 @@ import {
   answerJoinRequest,
   withdrawJoinRequest,
   deletePlayer,
+  updatePlayerTeam,
 } from "../services/api.js";
 import { formatDateTime, formatPlaces } from "../services/helpers.js";
 
@@ -76,6 +78,10 @@ const GamePage = ({ user }) => {
   const [confirmingLeave, setConfirmingLeave] = useState(false);
   // The player waiting in the "Remove?" popup, or null
   const [playerToRemove, setPlayerToRemove] = useState(null);
+  // Why the last drop in the teams view was refused; empty when it was saved
+  const [teamError, setTeamError] = useState("");
+  // True while a drop is being saved
+  const [movingPlayer, setMovingPlayer] = useState(false);
 
   // The logged-in user's own player in this game; undefined for a guest and
   // for a user who is not a player. A player whose account was deleted has
@@ -197,6 +203,44 @@ const GamePage = ({ user }) => {
     runJoinAction(() => deletePlayer(id, player._id));
   };
 
+  // Shows the player on the given team, without asking the server.
+  // current is the newest list of players: the one in "players" could be
+  // out of date when two drops follow each other quickly.
+  const showPlayerOnTeam = (playerId, team) => {
+    setPlayers((current) => {
+      return current.map((player) => {
+        return player._id === playerId ? player.onTeam(team) : player;
+      });
+    });
+  };
+
+  // Called for every drop in the teams view. player still holds the team
+  // they were dragged from.
+  const handleMovePlayer = async (player, team) => {
+    // One drop at a time: a second one sent before the first is answered
+    // could be saved in the other order, or be undone by the first failing
+    if (movingPlayer) return;
+
+    setTeamError("");
+    setMovingPlayer(true);
+    // Shown at once and saved after: waiting for the answer first would
+    // make the player jump back for a moment after every drop
+    showPlayerOnTeam(player._id, team);
+
+    try {
+      await updatePlayerTeam(id, player._id, team);
+    } catch (error) {
+      console.error("Error moving the player:", error);
+      const data = error.response ? error.response.data : null;
+      const reason = data ? data.msg : "The server could not be reached";
+      // Not saved, so the player goes back to where they were
+      showPlayerOnTeam(player._id, player.team);
+      setTeamError(`${player.username()} could not be moved: ${reason}`);
+    } finally {
+      setMovingPlayer(false);
+    }
+  };
+
   if (loading) return <p className="text-center py-5">Loading...</p>;
 
   if (loadError) {
@@ -211,12 +255,6 @@ const GamePage = ({ user }) => {
   }
 
   const badge = STATUS_BADGES[game.status];
-
-  // Either side can be missing when that account was deleted
-  const isOrganizer = (player) => {
-    if (!game.organizer || !player.user) return false;
-    return player.user._id === game.organizer._id;
-  };
 
   return (
     <div className="container py-4">
@@ -292,47 +330,20 @@ const GamePage = ({ user }) => {
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="col-12 col-md-5">
-          <div className="card h-100">
-            <div className="card-header">
-              Players{" "}
-              <span className="text-muted">
-                ({game.playerCount} of {game.maxPlayers})
-              </span>
-            </div>
-            <ul className="list-group list-group-flush">
-              {players.map((player) => (
-                <li
-                  className="list-group-item d-flex justify-content-between align-items-center gap-2"
-                  key={player._id}
-                >
-                  <span>
-                    {player.username()}{" "}
-                    {isOrganizer(player) && (
-                      <span className="badge text-bg-dark">Organizer</span>
-                    )}
-                  </span>
-                  {/* The organizer is never removed: the game is cancelled
-                      instead. An admin who is a player has "Leave game" for
-                      their own row. */}
-                  {game.playersCanBeRemovedBy(user) &&
-                    !isOrganizer(player) &&
-                    player !== myPlayer && (
-                    <button
-                      className="btn btn-outline-danger btn-sm"
-                      type="button"
-                      disabled={working}
-                      onClick={() => setPlayerToRemove(player)}
-                    >
-                      Remove
-                    </button>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+      <div className="mt-4">
+        {teamError && <div className="alert alert-danger">{teamError}</div>}
+        <Teams
+          game={game}
+          players={players}
+          myPlayer={myPlayer}
+          canArrange={game.canBeChangedBy(user)}
+          canRemove={game.playersCanBeRemovedBy(user)}
+          working={working}
+          onMove={handleMovePlayer}
+          onRemove={setPlayerToRemove}
+        />
       </div>
 
       {game.showsJoinRequestsTo(user) && (

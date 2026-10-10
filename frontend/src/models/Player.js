@@ -15,6 +15,18 @@ class Player {
   username() {
     return this.user ? this.user.username : "deleted user";
   }
+
+  // A copy of this player on another team. A copy and not a change to this
+  // one, because React only draws the page again for a new object in state.
+  onTeam(team) {
+    return new Player({
+      _id: this._id,
+      user: this.user,
+      game: this.game,
+      team,
+      createdAt: this.createdAt,
+    });
+  }
 }
 
 export default Player;

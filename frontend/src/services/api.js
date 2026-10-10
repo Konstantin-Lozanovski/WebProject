@@ -123,6 +123,17 @@ export const withdrawJoinRequest = async (gameId, requestId) => {
   await axiosInstance.delete(`/games/${gameId}/join-requests/${requestId}`);
 };
 
+// PUT /api/games/:gameId/players/:playerId
+// team is "A", "B" or "unassigned". The request behind every drop in the
+// teams view.
+export const updatePlayerTeam = async (gameId, playerId, team) => {
+  const response = await axiosInstance.put(
+    `/games/${gameId}/players/${playerId}`,
+    { team },
+  );
+  return new Player(response.data.player);
+};
+
 // DELETE /api/games/:gameId/players/:playerId
 // The one request behind both "Leave game" (the user's own player) and the
 // organizer's Remove (someone else's)

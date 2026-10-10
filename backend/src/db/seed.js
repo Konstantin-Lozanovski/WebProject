@@ -31,6 +31,8 @@ const HOUR = 60 * 60 * 1000;
 // status, whenever the seed is run. The organizer is given by username.
 // joinRequests are the join requests the game starts with: who sent each one
 // and its state. An accepted one also makes that user a player.
+// organizerTeam and the team of an accepted join request say which team
+// that player is on: "A" or "B". Without one the player is unassigned.
 // No user is a player in two games that overlap.
 const DEMO_GAMES = [
   // Finished
@@ -43,9 +45,10 @@ const DEMO_GAMES = [
     duration: 90,
     maxPlayers: 10,
     notes: "Thanks for coming, same time next week?",
+    organizerTeam: "A",
     joinRequests: [
-      { user: "sara_b", state: "accepted" },
-      { user: "ivan_t", state: "accepted" },
+      { user: "sara_b", state: "accepted", team: "B" },
+      { user: "ivan_t", state: "accepted", team: "A" },
     ],
   },
   {
@@ -56,7 +59,8 @@ const DEMO_GAMES = [
     startsInHours: -26,
     duration: 60,
     maxPlayers: 6,
-    joinRequests: [{ user: "ana_s", state: "accepted" }],
+    organizerTeam: "A",
+    joinRequests: [{ user: "ana_s", state: "accepted", team: "B" }],
   },
   // In progress: it started less than 90 minutes ago and lasts 120
   {
@@ -68,12 +72,13 @@ const DEMO_GAMES = [
     duration: 120,
     maxPlayers: 12,
     notes: "Indoor shoes only.",
+    organizerTeam: "A",
     joinRequests: [
-      { user: "elena_k", state: "accepted" },
+      { user: "elena_k", state: "accepted", team: "B" },
       { user: "david_m", state: "accepted" },
     ],
   },
-  // Upcoming
+  // Upcoming. The first one has players on Team A, on Team B and unassigned.
   {
     organizer: "marko_p",
     sport: "Football",
@@ -83,9 +88,10 @@ const DEMO_GAMES = [
     duration: 90,
     maxPlayers: 10,
     notes: "Bring a white and a dark shirt. We split the pitch fee after the game.",
+    organizerTeam: "A",
     joinRequests: [
-      { user: "ivan_t", state: "accepted" },
-      { user: "sara_b", state: "accepted" },
+      { user: "ivan_t", state: "accepted", team: "A" },
+      { user: "sara_b", state: "accepted", team: "B" },
       { user: "elena_k", state: "accepted" },
       { user: "ana_s", state: "pending" },
       { user: "david_m", state: "pending" },
@@ -114,8 +120,9 @@ const DEMO_GAMES = [
     duration: 90,
     maxPlayers: 4,
     notes: "Rackets can be rented at the club.",
+    organizerTeam: "A",
     joinRequests: [
-      { user: "david_m", state: "accepted" },
+      { user: "david_m", state: "accepted", team: "B" },
       { user: "sara_b", state: "pending" },
     ],
   },
@@ -132,9 +139,9 @@ const DEMO_GAMES = [
       { user: "ana_s", state: "pending" },
     ],
   },
-  // The full game: the organizer and one accepted player fill both places.
-  // The pending join request was sent before that, so accepting it now is
-  // refused.
+  // The full game: the organizer and one accepted player fill both places,
+  // one on each team. The pending join request was sent before that, so
+  // accepting it now is refused.
   {
     organizer: "david_m",
     sport: "Tennis",
@@ -143,8 +150,9 @@ const DEMO_GAMES = [
     startsInHours: 7 * 24,
     duration: 60,
     maxPlayers: 2,
+    organizerTeam: "A",
     joinRequests: [
-      { user: "ana_s", state: "accepted" },
+      { user: "ana_s", state: "accepted", team: "B" },
       { user: "marko_p", state: "pending" },
     ],
   },
@@ -232,15 +240,31 @@ const seedJoinRequests = async (users, games) => {
 };
 
 // Every game gets its organizer as its first player, and then the user of
-// each accepted join request. All of them start unassigned.
-const seedPlayers = async (games, joinRequests) => {
-  const players = games.map((game) => {
-    return { user: game.organizer, game: game._id };
-  });
+// each accepted join request. The teams come from DEMO_GAMES and not from
+// the saved join requests, because a join request does not store a team.
+// A team that is left out there is undefined here, and the schema's default
+// makes that player unassigned.
+const seedPlayers = async (users, games) => {
+  const players = [];
 
-  for (const joinRequest of joinRequests) {
-    if (joinRequest.state !== "accepted") continue;
-    players.push({ user: joinRequest.user, game: joinRequest.game });
+  for (let i = 0; i < games.length; i++) {
+    const demoGame = DEMO_GAMES[i];
+    players.push({
+      user: games[i].organizer,
+      game: games[i]._id,
+      team: demoGame.organizerTeam,
+    });
+
+    for (const demoJoinRequest of demoGame.joinRequests) {
+      if (demoJoinRequest.state !== "accepted") continue;
+      const user = users.find((user) => user.username === demoJoinRequest.user);
+
+      players.push({
+        user: user._id,
+        game: games[i]._id,
+        team: demoJoinRequest.team,
+      });
+    }
   }
 
   // ordered makes create save them one after another, so the organizer of
@@ -258,7 +282,7 @@ export const seedDatabase = async () => {
   const users = await seedUsers();
   const games = await seedGames(users);
   const joinRequests = await seedJoinRequests(users, games);
-  const players = await seedPlayers(games, joinRequests);
+  const players = await seedPlayers(users, games);
 
   return {
     users: users.length,

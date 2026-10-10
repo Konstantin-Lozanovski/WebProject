@@ -68,7 +68,7 @@ const toPublicGame = (game, playerCount) => {
 };
 
 // The user must be populated before this is called
-const toPublicPlayer = (player) => {
+export const toPublicPlayer = (player) => {
   return {
     _id: player._id,
     user: player.user,
@@ -117,6 +117,20 @@ const checkNoPlayerOverlaps = async (game, players) => {
     if (overlappingGame)
       throw new ConflictError(
         `This change makes the game overlap another game ${player.user.username} is a player in (${overlappingGame.sport} in ${overlappingGame.city})`,
+      );
+  }
+};
+
+// Throws when Team A or Team B has more players than half the new max. The
+// number of players alone does not show it: 4 players fit in a max of 4, but
+// not when 3 of them are on the same team.
+const checkTeamsFit = (maxPlayers, players) => {
+  for (const team of ["A", "B"]) {
+    const teamPlayers = players.filter((player) => player.team === team);
+
+    if (teamPlayers.length > maxPlayers / 2)
+      throw new ConflictError(
+        `Team ${team} has ${teamPlayers.length} players, so the max cannot be lower than ${teamPlayers.length * 2}`,
       );
   }
 };
@@ -237,6 +251,7 @@ export const updateGame = async (req, res) => {
     throw new ConflictError(
       `This game has ${players.length} players, so the max cannot be lower than that`,
     );
+  checkTeamsFit(maxPlayers, players);
 
   // With the same start time and duration nothing new can overlap
   if (game.isModified("startTime") || game.isModified("duration")) {

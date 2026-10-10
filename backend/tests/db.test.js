@@ -102,6 +102,32 @@ test("seeding a second time gives the same data, without what was added in betwe
   assert.equal(adminLogin.status, 200);
 });
 
+test("seeding places players on Team A, on Team B and unassigned, and no team over half the max", async () => {
+  const seed = await post("/api/db/seed");
+  assert.equal(seed.status, 201);
+
+  const list = await fetch(`${baseUrl}/api/games`);
+  const games = (await list.json()).games;
+  // Every team a player of an upcoming game is on
+  const seenTeams = [];
+
+  for (const game of games) {
+    const gamePage = await fetch(`${baseUrl}/api/games/${game._id}`);
+    const players = (await gamePage.json()).players;
+    const teams = players.map((player) => player.team);
+    seenTeams.push(...teams);
+
+    for (const team of ["A", "B"]) {
+      const teamCount = teams.filter((one) => one === team).length;
+      assert.ok(teamCount <= game.maxPlayers / 2, `${game.sport} in ${game.city}`);
+    }
+  }
+
+  assert.ok(seenTeams.includes("A"));
+  assert.ok(seenTeams.includes("B"));
+  assert.ok(seenTeams.includes("unassigned"));
+});
+
 test("deleting all data after a seed leaves no demo account to log in with", async () => {
   const response = await fetch(`${baseUrl}/api/db`, { method: "DELETE" });
   assert.equal(response.status, 204);

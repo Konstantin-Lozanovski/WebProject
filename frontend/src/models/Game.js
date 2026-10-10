@@ -50,8 +50,9 @@ class Game {
     return this.organizer._id === user._id;
   }
 
-  // Who gets the Edit and Cancel buttons: the organizer until the game
-  // starts, an admin always. The server checks the same rule again.
+  // Who gets the Edit and Cancel buttons and may drag players between the
+  // teams: the organizer until the game starts, an admin always. The server
+  // checks the same rule again.
   canBeChangedBy(user) {
     if (!user) return false;
     if (user.isAdmin()) return true;
@@ -77,6 +78,11 @@ class Game {
     if (!user) return false;
     if (user.isAdmin()) return true;
     return this.isOrganizedBy(user) && this.startsInMoreThanAnHour();
+  }
+
+  // How many spaces each team has: the max is always even
+  teamSize() {
+    return this.maxPlayers / 2;
   }
 
   placesLeft() {

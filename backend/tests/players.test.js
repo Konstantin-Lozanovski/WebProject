@@ -76,15 +76,16 @@ const nextFreeStart = () => {
   return Date.now() + nextDay * DAY;
 };
 
-// Creates a game through the API and returns it as the API answered
-const createGameAs = async (token) => {
+// Creates a game through the API and returns it as the API answered.
+// maxPlayers is optional: most tests do not care how big the game is.
+const createGameAs = async (token, maxPlayers = 10) => {
   const game = {
     sport: "Football",
     city: "Skopje",
     venue: "Sports Center Boris Trajkovski, pitch 2",
     startTime: new Date(nextFreeStart()).toISOString(),
     duration: 90,
-    maxPlayers: 10,
+    maxPlayers,
   };
   const response = await send("POST", "/api/games", token, game);
   assert.equal(response.status, 201);
@@ -267,11 +268,152 @@ test("leaving and removing are refused in the last hour before the start and aft
   assert.equal(await getMyRequest(game, markoToken), null);
 });
 
-test("the player route is in the OpenAPI file", async () => {
+// Dropping a player on a column of the teams view is this request
+const setTeam = (game, player, team, token) => {
+  return send("PUT", `/api/games/${game._id}/players/${player._id}`, token, {
+    team,
+  });
+};
+
+test("the organizer puts a player on a team, switches them and unassigns them", async () => {
+  const game = await createGameAs(petarToken);
+  const marko = await joinGameAs(game, markoToken, "marko_7");
+  assert.equal(marko.team, "unassigned");
+
+  const toA = await setTeam(game, marko, "A", petarToken);
+  const body = await toA.json();
+
+  assert.equal(toA.status, 200);
+  assert.equal(body.player._id, marko._id);
+  assert.equal(body.player.team, "A");
+  assert.equal(body.player.user.username, "marko_7");
+  assert.equal((await getPlayer(game, "marko_7")).team, "A");
+
+  const toB = await setTeam(game, marko, "B", petarToken);
+  assert.equal(toB.status, 200);
+  assert.equal((await getPlayer(game, "marko_7")).team, "B");
+
+  const back = await setTeam(game, marko, "unassigned", petarToken);
+  assert.equal(back.status, 200);
+  assert.equal((await getPlayer(game, "marko_7")).team, "unassigned");
+});
+
+test("only the organizer or an admin moves players: a player gets 403 and a guest 401", async () => {
+  const game = await createGameAs(petarToken);
+  const marko = await joinGameAs(game, markoToken, "marko_7");
+  await joinGameAs(game, saraToken, "sara_b");
+
+  const byGuest = await setTeam(game, marko, "A");
+  // Not even their own team: the organizer arranges the teams
+  const byThemselves = await setTeam(game, marko, "A", markoToken);
+  const byOtherPlayer = await setTeam(game, marko, "A", saraToken);
+  const body = await byOtherPlayer.json();
+
+  assert.equal(byGuest.status, 401);
+  assert.equal(byThemselves.status, 403);
+  assert.equal(byOtherPlayer.status, 403);
+  assert.equal(body.msg, "Only the organizer can arrange the teams of this game");
+  assert.equal((await getPlayer(game, "marko_7")).team, "unassigned");
+
+  const byAdmin = await setTeam(game, marko, "B", adminToken);
+  assert.equal(byAdmin.status, 200);
+  assert.equal((await getPlayer(game, "marko_7")).team, "B");
+});
+
+test("the organizer arranges the teams until the game starts, an admin at any time", async () => {
+  const game = await createGameAs(petarToken);
+  const marko = await joinGameAs(game, markoToken, "marko_7");
+
+  // Unlike removing a player, this is still allowed in the last hour
+  await moveStartTime(game, 0.5 * HOUR);
+  const inTime = await setTeam(game, marko, "A", petarToken);
+  assert.equal(inTime.status, 200);
+
+  await moveStartTime(game, -0.5 * HOUR);
+  const tooLate = await setTeam(game, marko, "B", petarToken);
+  const body = await tooLate.json();
+
+  assert.equal(tooLate.status, 409);
+  assert.match(body.msg, /already started/);
+  assert.equal((await getPlayer(game, "marko_7")).team, "A");
+
+  const byAdmin = await setTeam(game, marko, "B", adminToken);
+  assert.equal(byAdmin.status, 200);
+  assert.equal((await getPlayer(game, "marko_7")).team, "B");
+});
+
+test("a team holds at most half the max: one more player returns 409, for an admin too", async () => {
+  // Max 4, so each team has 2 spaces
+  const game = await createGameAs(petarToken, 4);
+  const petar = await getPlayer(game, "petar_v");
+  const marko = await joinGameAs(game, markoToken, "marko_7");
+  const sara = await joinGameAs(game, saraToken, "sara_b");
+
+  assert.equal((await setTeam(game, petar, "A", petarToken)).status, 200);
+  assert.equal((await setTeam(game, marko, "A", petarToken)).status, 200);
+
+  const third = await setTeam(game, sara, "A", petarToken);
+  const body = await third.json();
+  const byAdmin = await setTeam(game, sara, "A", adminToken);
+
+  assert.equal(third.status, 409);
+  assert.equal(body.msg, "Team A is full");
+  assert.equal(byAdmin.status, 409);
+  assert.equal((await getPlayer(game, "sara_b")).team, "unassigned");
+
+  // A player already on the full team can be dropped on it again
+  const sameTeam = await setTeam(game, marko, "A", petarToken);
+  assert.equal(sameTeam.status, 200);
+
+  // The other team still has room, and unassigned has no limit
+  const toB = await setTeam(game, sara, "B", petarToken);
+  assert.equal(toB.status, 200);
+  const unassign = await setTeam(game, marko, "unassigned", petarToken);
+  assert.equal(unassign.status, 200);
+
+  // Marko left a space on Team A behind
+  const intoFreedSpace = await setTeam(game, sara, "A", petarToken);
+  assert.equal(intoFreedSpace.status, 200);
+});
+
+test("a team that is not A, B or unassigned returns 400, and a wrong game or player 404", async () => {
+  const game = await createGameAs(petarToken);
+  const otherGame = await createGameAs(petarToken);
+  const marko = await joinGameAs(game, markoToken, "marko_7");
+
+  const unknownTeam = await setTeam(game, marko, "C", petarToken);
+  const body = await unknownTeam.json();
+  // The set is closed and exact: "a" is not "A"
+  const lowerCase = await setTeam(game, marko, "a", petarToken);
+  const notText = await setTeam(game, marko, 1, petarToken);
+  const missing = await setTeam(game, marko, undefined, petarToken);
+
+  assert.equal(unknownTeam.status, 400);
+  assert.equal(body.fields.team, "Team must be A, B or unassigned");
+  assert.equal(lowerCase.status, 400);
+  assert.equal(notText.status, 400);
+  assert.equal(missing.status, 400);
+
+  const throughOtherGame = await setTeam(otherGame, marko, "A", petarToken);
+  const missingPlayer = await setTeam(game, { _id: "66f1c0a4e3b2a1d4c5f6a7b8" }, "A", petarToken);
+  const notAnId = await setTeam(game, { _id: "not-an-id" }, "A", petarToken);
+
+  assert.equal(throughOtherGame.status, 404);
+  assert.equal(missingPlayer.status, 404);
+  assert.equal(notAnId.status, 400);
+  assert.equal((await getPlayer(game, "marko_7")).team, "unassigned");
+});
+
+test("the player routes are in the OpenAPI file", async () => {
   const response = await send("GET", "/api/swagger.json");
   const body = await response.json();
 
   const one = body.paths["/api/games/{gameId}/players/{playerId}"];
+
+  assert.ok(one.put.responses["200"]);
+  assert.ok(one.put.responses["400"]);
+  assert.ok(one.put.responses["403"]);
+  assert.ok(one.put.responses["409"]);
 
   assert.ok(one.delete.responses["204"]);
   assert.ok(one.delete.responses["403"]);
