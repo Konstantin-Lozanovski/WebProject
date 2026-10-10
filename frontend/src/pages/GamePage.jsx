@@ -5,6 +5,7 @@ import JoinPanel from "../components/JoinPanel.jsx";
 import PendingJoinRequests from "../components/PendingJoinRequests.jsx";
 import Teams from "../components/Teams.jsx";
 import Chat from "../components/Chat.jsx";
+import Weather from "../components/Weather.jsx";
 import {
   fetchGame,
   deleteGame,
@@ -333,6 +334,9 @@ const GamePage = ({ user }) => {
               </dl>
             </div>
           </div>
+        </div>
+        <div className="col-12 col-md-5">
+          <Weather game={game} />
         </div>
       </div>
 
