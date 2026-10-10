@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PageHeader from "../components/PageHeader.jsx";
 import Modal from "../components/Modal.jsx";
 import { deleteAllData, seedInitialData } from "../services/api.js";
 
@@ -82,68 +83,77 @@ const Database = ({ onLogout }) => {
   const confirmation = pendingAction ? CONFIRMATIONS[pendingAction] : null;
 
   return (
-    <div className="container py-4">
-      <h1 className="h2 mb-2">Database</h1>
-      <p className="text-muted mb-4">
-        Tools for testing the app and returning it to a known starting point.
-        No login is needed.
-      </p>
+    <>
+      <PageHeader
+        title="Database"
+        text="Tools for testing the app and returning it to a known starting point. No login is needed."
+      />
+      <div className="container page-body">
+        {working && <div className="alert alert-info">Working...</div>}
+        {result && (
+          <div className={`alert alert-${result.variant}`}>{result.text}</div>
+        )}
 
-      {working && <div className="alert alert-info">Working...</div>}
-      {result && (
-        <div className={`alert alert-${result.variant}`}>{result.text}</div>
-      )}
-
-      <div className="row g-4">
-        <div className="col-12 col-md-6">
-          <div className="card h-100">
-            <div className="card-body d-flex flex-column">
-              <h2 className="h5">Delete all data</h2>
-              <p>Empties every collection in the database.</p>
-              <button
-                className="btn btn-danger mt-auto align-self-start"
-                type="button"
-                disabled={working}
-                onClick={() => setPendingAction("delete")}
-              >
-                Delete all data
-              </button>
+        <div className="row g-4">
+          <div className="col-12 col-md-6">
+            <div className="card h-100 action-card is-danger">
+              <div className="card-body d-flex flex-column">
+                <h2 className="h5">Delete all data</h2>
+                <p>
+                  Empties every collection in the database: users, games, join
+                  requests, players and messages.
+                </p>
+                <p className="text-muted small">
+                  Every account is deleted too, so you are logged out.
+                </p>
+                <button
+                  className="btn btn-danger mt-auto align-self-start"
+                  type="button"
+                  disabled={working}
+                  onClick={() => setPendingAction("delete")}
+                >
+                  Delete all data
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="col-12 col-md-6">
+            <div className="card h-100 action-card">
+              <div className="card-body d-flex flex-column">
+                <h2 className="h5">Seed initial data</h2>
+                <p>
+                  Clears the database first, then adds the initial data: one
+                  admin, several users and games in every status.
+                </p>
+                <p className="text-muted small">
+                  The accounts are replaced as well, so you are logged out.
+                </p>
+                <button
+                  className="btn btn-primary mt-auto align-self-start"
+                  type="button"
+                  disabled={working}
+                  onClick={() => setPendingAction("seed")}
+                >
+                  Seed initial data
+                </button>
+              </div>
             </div>
           </div>
         </div>
-        <div className="col-12 col-md-6">
-          <div className="card h-100">
-            <div className="card-body d-flex flex-column">
-              <h2 className="h5">Seed initial data</h2>
-              <p>
-                Clears the database first, then adds the initial data: one
-                admin, several users and games in every status.
-              </p>
-              <button
-                className="btn btn-primary mt-auto align-self-start"
-                type="button"
-                disabled={working}
-                onClick={() => setPendingAction("seed")}
-              >
-                Seed initial data
-              </button>
-            </div>
-          </div>
-        </div>
+
+        {confirmation && (
+          <Modal
+            title={confirmation.title}
+            text={confirmation.text}
+            confirmLabel={confirmation.confirmLabel}
+            cancelLabel={confirmation.cancelLabel}
+            confirmVariant={confirmation.confirmVariant}
+            onConfirm={handleConfirm}
+            onClose={closeModal}
+          />
+        )}
       </div>
-
-      {confirmation && (
-        <Modal
-          title={confirmation.title}
-          text={confirmation.text}
-          confirmLabel={confirmation.confirmLabel}
-          cancelLabel={confirmation.cancelLabel}
-          confirmVariant={confirmation.confirmVariant}
-          onConfirm={handleConfirm}
-          onClose={closeModal}
-        />
-      )}
-    </div>
+    </>
   );
 };
 

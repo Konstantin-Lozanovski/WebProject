@@ -127,7 +127,7 @@ const JoinPanel = ({
   if (!content) return null;
 
   return (
-    <div className="card mb-4">
+    <div className="card join-panel mb-4">
       <div className="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
         {content}
       </div>

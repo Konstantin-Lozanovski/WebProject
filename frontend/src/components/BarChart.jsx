@@ -29,7 +29,17 @@ const BarChart = ({ title, labels, values, emptyText }) => {
 
   const data = {
     labels,
-    datasets: [{ label: title, data: values, backgroundColor: BAR_COLOR }],
+    datasets: [
+      {
+        label: title,
+        data: values,
+        backgroundColor: BAR_COLOR,
+        // Rounded ends, like the corners of the cards
+        borderRadius: 4,
+        // Keeps one or two bars from growing as thick as the whole chart
+        maxBarThickness: 28,
+      },
+    ],
   };
 
   return (

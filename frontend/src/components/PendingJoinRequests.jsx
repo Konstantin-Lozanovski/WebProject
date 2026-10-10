@@ -1,3 +1,5 @@
+import Avatar from "./Avatar.jsx";
+import EmptyState from "./EmptyState.jsx";
 import { formatDateTime } from "../services/helpers.js";
 
 // The pending join requests of a game, for its organizer and for admins.
@@ -13,9 +15,12 @@ const PendingJoinRequests = ({
 }) => {
   return (
     <>
-      <h2 className="h4 mb-3">Pending join requests</h2>
+      <h2 className="section-title">Pending join requests</h2>
       {joinRequests.length === 0 && (
-        <p className="text-muted">No pending join requests.</p>
+        <EmptyState
+          title="No pending join requests"
+          text="A new join request shows up here for you to accept or decline."
+        />
       )}
       <ul className="list-group">
         {joinRequests.map((joinRequest) => (
@@ -23,12 +28,15 @@ const PendingJoinRequests = ({
             className="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2"
             key={joinRequest._id}
           >
-            <div>
-              {joinRequest.username()}
-              <br />
-              <small className="text-muted">
-                sent {formatDateTime(joinRequest.createdAt)}
-              </small>
+            <div className="d-flex align-items-center gap-2">
+              <Avatar name={joinRequest.username()} />
+              <div>
+                {joinRequest.username()}
+                <br />
+                <small className="text-muted">
+                  sent {formatDateTime(joinRequest.createdAt)}
+                </small>
+              </div>
             </div>
             {canAnswer && (
               <div className="d-flex gap-1">

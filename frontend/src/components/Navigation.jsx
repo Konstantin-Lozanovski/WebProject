@@ -1,4 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
+import Avatar from "./Avatar.jsx";
 
 // user is null for a guest
 const Navigation = ({ user, onLogout }) => {
@@ -73,11 +74,7 @@ const Navigation = ({ user, onLogout }) => {
           {user ? (
             <div className="d-flex align-items-center gap-2 py-2 py-lg-0">
               <div className="user-chip" title={`Logged in as ${user.username}`}>
-                {/* There are no profile pictures, so the first letter of the
-                    username stands in for one */}
-                <span className="user-avatar">
-                  {user.username.charAt(0).toUpperCase()}
-                </span>
+                <Avatar name={user.username} />
                 <span className="user-name text-truncate">{user.username}</span>
                 {user.isAdmin() && (
                   <span className="badge text-bg-warning">Admin</span>

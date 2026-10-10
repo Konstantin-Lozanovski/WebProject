@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
+import PageHeader from "../components/PageHeader.jsx";
+import EmptyState from "../components/EmptyState.jsx";
 import GameForm from "../components/GameForm.jsx";
 import { fetchGame, updateGame } from "../services/api.js";
+import { SPORT_BALLS } from "../models/Game.js";
 
 const EditGame = ({ user }) => {
   // The id is the ":id" part of the address /games/:id/edit
@@ -47,11 +50,12 @@ const EditGame = ({ user }) => {
 
   if (loadError) {
     return (
-      <div className="container text-center py-5">
-        <h1 className="h2 mb-3">{loadError}</h1>
-        <Link className="btn btn-primary" to="/">
-          Back to Home
-        </Link>
+      <div className="container py-5">
+        <EmptyState title={loadError}>
+          <Link className="btn btn-primary" to="/">
+            Back to Home
+          </Link>
+        </EmptyState>
       </div>
     );
   }
@@ -60,33 +64,60 @@ const EditGame = ({ user }) => {
   // refuse the edit anyway; this only saves them filling in the form.
   if (!game.canBeChangedBy(user)) {
     return (
-      <div className="container text-center py-5">
-        <h1 className="h2 mb-3">
-          {game.isOrganizedBy(user)
-            ? "This game has already started, so it can no longer be changed."
-            : "Only the organizer can edit this game."}
-        </h1>
-        <Link className="btn btn-primary" to={`/games/${id}`}>
-          Back to the game
-        </Link>
+      <div className="container py-5">
+        <EmptyState
+          title={
+            game.isOrganizedBy(user)
+              ? "This game has already started, so it can no longer be changed."
+              : "Only the organizer can edit this game."
+          }
+        >
+          <Link className="btn btn-primary" to={`/games/${id}`}>
+            Back to the game
+          </Link>
+        </EmptyState>
       </div>
     );
   }
 
   return (
-    <div className="container py-4">
-      <div className="row justify-content-center">
-        <div className="col-12 col-md-10 col-lg-7">
-          <h1 className="h2 mb-4">Edit game</h1>
-          <GameForm
-            game={game}
-            submitLabel="Save changes"
-            backTo={`/games/${id}`}
-            onSubmit={handleSubmit}
-          />
+    <>
+      <PageHeader
+        title="Edit game"
+        text={`${game.sport} in ${game.city}, organized by ${game.organizerName()}`}
+        ball={SPORT_BALLS[game.sport]}
+      />
+      <div className="container page-body">
+        <div className="row g-4">
+          <div className="col-12 col-lg-8">
+            <GameForm
+              game={game}
+              submitLabel="Save changes"
+              backTo={`/games/${id}`}
+              onSubmit={handleSubmit}
+            />
+          </div>
+          <div className="col-12 col-lg-4">
+            <div className="card">
+              <div className="card-header">Good to know</div>
+              <ul className="list-group list-group-flush">
+                <li className="list-group-item">
+                  The max cannot go below the {game.playerCount} players the
+                  game has now.
+                </li>
+                <li className="list-group-item">
+                  A new time is refused if it makes the game overlap another
+                  game of one of its players.
+                </li>
+                <li className="list-group-item">
+                  The organizer can edit the game until it starts.
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

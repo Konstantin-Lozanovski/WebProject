@@ -6,6 +6,15 @@ export const formatTime = (date) => {
   return date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 };
 
+// "Sat 10 Oct"
+export const formatShortDate = (date) => {
+  return date.toLocaleDateString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+};
+
 // "Sat, 10 Oct 2026, 18:00"
 export const formatDateTime = (date) => {
   const day = date.toLocaleDateString("en-GB", {

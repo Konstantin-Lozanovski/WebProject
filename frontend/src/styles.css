@@ -1,7 +1,8 @@
 /*
   The look of the whole app. It is loaded after Bootstrap and mostly changes
   Bootstrap's own colour variables, so the components keep their Bootstrap
-  classes and only the Home page needs a few classes of our own.
+  classes. The classes of our own come after that: the parts every page
+  shares, and then the ones of a single page.
 */
 
 /* ---------- Palette ---------- */
@@ -44,6 +45,24 @@
 h1,
 h2 {
   font-weight: 600;
+}
+
+/* The title of a part of a page ("Teams", "Chat"), with a short bar in the
+   orange of the logo in front of it */
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.section-title::before {
+  content: "";
+  width: 0.3rem;
+  height: 1.2rem;
+  border-radius: 2px;
+  background: var(--ball);
 }
 
 /* ---------- Navigation and footer ---------- */
@@ -121,6 +140,10 @@ h2 {
   height: 1.9rem;
   border-radius: 50%;
   background: var(--ball);
+  /* Set here and not taken from the navigation: the letter is also shown
+     on the white cards of the pages */
+  color: #ffffff;
+  font-size: 0.9rem;
   font-weight: 700;
 }
 
@@ -130,10 +153,181 @@ h2 {
 }
 
 .footer {
-  background: var(--surface);
-  border-top: 1px solid var(--line);
-  color: var(--muted);
+  background: var(--topbar);
+  color: #d2dde7;
   font-size: 0.85rem;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #ffffff;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.footer-brand img {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+}
+
+.footer-links a {
+  color: #d2dde7;
+  text-decoration: none;
+}
+
+.footer-links a:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+/* ---------- Band at the top of a page ---------- */
+/* The same colours as the intro on the Home page */
+.page-header {
+  position: relative;
+  /* Cuts off the ball while it rolls in from outside the band */
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--topbar), var(--accent));
+  color: #ffffff;
+  /* More room below than above: the first cards of the page lie on it */
+  padding: 2rem 0 4.5rem;
+}
+
+/* position: relative puts the text above the ball */
+.page-header-text {
+  position: relative;
+  animation: rise 0.6s ease-out both;
+}
+
+.page-title {
+  margin-bottom: 0.25rem;
+  font-size: 1.9rem;
+  font-weight: 700;
+}
+
+.page-lead {
+  max-width: 40rem;
+  margin-bottom: 0;
+  color: #d2dde7;
+}
+
+.page-header-ball {
+  position: absolute;
+  right: 6%;
+  top: 1rem;
+  width: 9rem;
+  height: 9rem;
+  opacity: 0.2;
+  animation: roll-in 0.9s ease-out both;
+}
+
+/* The ball starts further right, see-through, and rolls to its place */
+@keyframes roll-in {
+  from {
+    opacity: 0;
+    transform: translateX(14rem) rotate(240deg);
+  }
+  to {
+    opacity: 0.2;
+    transform: translateX(0) rotate(0deg);
+  }
+}
+
+/* The page under the band. It is pulled up, so its first cards lie half
+   on the band and half on the page. */
+.page-body {
+  position: relative;
+  margin-top: -2.75rem;
+  padding-bottom: 3rem;
+}
+
+/* ---------- Tiles with one number or fact ---------- */
+.stat {
+  height: 100%;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.stat-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.stat-value {
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.25;
+  /* A long venue breaks into lines instead of leaving the tile */
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-note {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* Several numbers next to each other in one card, with a line between them */
+.stat-group {
+  display: flex;
+  text-align: center;
+}
+
+.stat-group > div {
+  flex: 1;
+  padding: 0 0.5rem;
+}
+
+.stat-group > div + div {
+  border-left: 1px solid var(--line);
+}
+
+/* ---------- Empty lists ---------- */
+.empty {
+  margin-bottom: 1.5rem;
+  padding: 1.75rem 1rem;
+  border: 1px dashed #9aa6b2;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.5);
+  text-align: center;
+}
+
+/* The logo without its colour, so it does not look like something to click */
+.empty-ball {
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-bottom: 0.75rem;
+  opacity: 0.45;
+  filter: grayscale(1);
+}
+
+.empty-title {
+  margin-bottom: 0.25rem;
+  font-size: 1.05rem;
+}
+
+.empty-text {
+  margin-bottom: 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+/* A button under the text */
+.empty .btn {
+  margin-top: 1rem;
 }
 
 /* ---------- Intro on the Home page ---------- */
@@ -291,7 +485,10 @@ h2 {
   .hero-text,
   .hero-ball img,
   .hero-ball::after,
-  .step {
+  .step,
+  .page-header-text,
+  .page-header-ball,
+  .modal-content {
     animation: none;
   }
 
@@ -365,8 +562,18 @@ h2 {
 }
 
 .game-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
   font-size: 1.05rem;
   font-weight: 600;
+}
+
+/* The ball of the game's sport */
+.game-ball {
+  width: 1.15rem;
+  height: 1.15rem;
 }
 
 .game-meta {
@@ -422,7 +629,188 @@ h2 {
   color: var(--muted);
 }
 
+/* ---------- Log in and Register ---------- */
+.auth {
+  max-width: 54rem;
+  margin: 0 auto;
+  /* Keeps the coloured side inside the card's rounded corners */
+  overflow: hidden;
+}
+
+.auth-side {
+  flex-direction: column;
+  justify-content: center;
+  padding: 2rem;
+  background: linear-gradient(180deg, var(--topbar), var(--accent));
+  color: #ffffff;
+  text-align: center;
+}
+
+.auth-slogan {
+  margin: 1.75rem 0 0.5rem;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.auth-text {
+  margin-bottom: 0;
+  font-size: 0.9rem;
+  color: #d2dde7;
+}
+
+.auth-form {
+  padding: 2rem;
+}
+
+/* ---------- Page not found ---------- */
+/* "404" with a bouncing basketball as the zero */
+.not-found-code {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 0.75rem;
+  /* Room for the ball to bounce into */
+  padding-top: 4rem;
+  margin-bottom: 1.5rem;
+  font-size: 4.5rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent);
+}
+
+/* Lifts the ball from the bottom of the line to the foot of the digits */
+.not-found-code .hero-ball {
+  margin-bottom: 0.5rem;
+}
+
+/* ---------- Database page ---------- */
+/* The line along the top says which of the two actions is the dangerous one */
+.action-card {
+  border-top: 4px solid var(--accent);
+}
+
+.action-card.is-danger {
+  border-top-color: var(--danger);
+}
+
+/* ---------- Game page ---------- */
+/* The ball of the sport in the title of the band */
+.title-ball {
+  width: 1.9rem;
+  height: 1.9rem;
+  margin-right: 0.6rem;
+  vertical-align: -0.3rem;
+}
+
+/* The bar of taken places */
+.stat .progress {
+  --bs-progress-height: 0.45rem;
+  --bs-progress-bg: var(--tint);
+  --bs-progress-bar-bg: var(--accent);
+  margin-top: 0.5rem;
+}
+
+/* The card that says how to join or leave */
+.join-panel {
+  border-left: 4px solid var(--ball);
+}
+
+/* ---------- Chat on the Game page ---------- */
+/* A fixed height with its own scrollbar, so a long chat does not stretch
+   the page */
+.chat-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  height: 22rem;
+  overflow-y: auto;
+  margin: 0;
+  padding: 1rem;
+  list-style: none;
+  background: var(--tint);
+}
+
+.chat-message {
+  display: flex;
+  gap: 0.5rem;
+  max-width: 85%;
+}
+
+/* The user's own messages are on the right, in the accent colour */
+.chat-message.is-mine {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+.chat-meta {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.chat-bubble {
+  display: inline-block;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  /* The lines of a message start at the left even in a bubble on the right */
+  text-align: left;
+}
+
+.chat-message.is-mine .chat-bubble {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.chat-delete {
+  padding: 0;
+  border: 0;
+  font-size: 0.75rem;
+  vertical-align: baseline;
+}
+
 /* ---------- Teams on the Game page ---------- */
+/* Each column has a line in its own colour along the top, and the round
+   letters of its players take the same colour: blue for Team A, the orange
+   of the logo for Team B, grey for the unassigned players */
+.team-column {
+  border-top: 4px solid #9aa6b2;
+}
+
+.team-column .user-avatar {
+  background: #9aa6b2;
+}
+
+.team-column.team-A {
+  border-top-color: var(--accent);
+}
+
+.team-A .user-avatar {
+  background: var(--accent);
+}
+
+.team-column.team-B {
+  border-top-color: var(--ball);
+}
+
+.team-B .user-avatar {
+  background: var(--ball);
+}
+
+/* A space nobody is in yet */
+.free-space {
+  margin: 0.5rem 0.75rem;
+  padding: 0.35rem 0.75rem;
+  border: 1px dashed #9aa6b2;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  /* It is a list item without Bootstrap's classes, so it would get a dot */
+  list-style: none;
+}
+
 /* The column a dragged player is over right now */
 .team-column.is-over {
   border-color: var(--accent);
@@ -463,6 +851,17 @@ h2 {
   font-weight: 600;
 }
 
+/* The one popup of the app comes up the way the texts of the pages do */
+.modal-content {
+  border: 0;
+  box-shadow: 0 0.75rem 2rem rgba(38, 50, 61, 0.35);
+  animation: rise 0.25s ease-out both;
+}
+
+.modal-header {
+  background: var(--tint);
+}
+
 .list-group {
   --bs-list-group-bg: var(--surface);
   --bs-list-group-border-color: var(--line);
@@ -492,7 +891,10 @@ h2 {
 }
 
 .table th {
-  font-size: 0.8rem;
+  background: var(--tint);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--muted);
 }
 

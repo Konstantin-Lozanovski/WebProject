@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
+import PageHeader from "../components/PageHeader.jsx";
+import Stat from "../components/Stat.jsx";
+import EmptyState from "../components/EmptyState.jsx";
 import Modal from "../components/Modal.jsx";
 import JoinPanel from "../components/JoinPanel.jsx";
 import PendingJoinRequests from "../components/PendingJoinRequests.jsx";
@@ -17,8 +20,13 @@ import {
   deletePlayer,
   updatePlayerTeam,
 } from "../services/api.js";
-import { STATUS_BADGES } from "../models/Game.js";
-import { formatDateTime, formatPlaces } from "../services/helpers.js";
+import { STATUS_BADGES, SPORT_BALLS } from "../models/Game.js";
+import {
+  formatTime,
+  formatShortDate,
+  formatDateTime,
+  formatPlaces,
+} from "../services/helpers.js";
 
 // Asks the API for everything the page shows to this user (null for a
 // guest). Not every user may ask for every part: a guest has no join
@@ -241,11 +249,12 @@ const GamePage = ({ user }) => {
 
   if (loadError) {
     return (
-      <div className="container text-center py-5">
-        <h1 className="h2 mb-3">{loadError}</h1>
-        <Link className="btn btn-primary" to="/">
-          Back to Home
-        </Link>
+      <div className="container py-5">
+        <EmptyState title={loadError}>
+          <Link className="btn btn-primary" to="/">
+            Back to Home
+          </Link>
+        </EmptyState>
       </div>
     );
   }
@@ -254,170 +263,189 @@ const GamePage = ({ user }) => {
   // The chat is for the game's players; an admin reads every chat
   const isPlayer = myPlayer !== undefined;
   const showsChat = isPlayer || (user !== null && user.isAdmin());
+  // How much of the bar of places is filled, in percent
+  const placesTaken = (game.playerCount / game.maxPlayers) * 100;
 
   return (
-    <div className="container py-4">
-      <div className="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-4">
-        <div>
-          <h1 className="h2 mb-1">
+    <>
+      <PageHeader
+        title={
+          <>
+            {/* Empty alt: the title next to it already names the sport */}
+            <img className="title-ball" src={SPORT_BALLS[game.sport]} alt="" />
             {game.sport} in {game.city}{" "}
             <span className={`badge text-bg-${badge.variant} fs-6 align-middle`}>
               {badge.label}
             </span>
-          </h1>
-          <p className="text-muted mb-0">Organizer: {game.organizerName()}</p>
-        </div>
+          </>
+        }
+        text={`Organizer: ${game.organizerName()}`}
+        ball={SPORT_BALLS[game.sport]}
+      >
         {game.canBeChangedBy(user) && (
-          <div className="d-flex gap-2">
-            <Link className="btn btn-outline-primary" to={`/games/${id}/edit`}>
+          <>
+            <Link className="btn btn-light" to={`/games/${id}/edit`}>
               Edit game
             </Link>
             <button
-              className="btn btn-outline-danger"
+              className="btn btn-outline-light"
               type="button"
               disabled={cancelling}
               onClick={() => setConfirmingCancel(true)}
             >
               Cancel game
             </button>
-          </div>
+          </>
         )}
-      </div>
+      </PageHeader>
 
-      {cancelError && <div className="alert alert-danger">{cancelError}</div>}
-      {joinError && <div className="alert alert-danger">{joinError}</div>}
-
-      <JoinPanel
-        user={user}
-        game={game}
-        isPlayer={isPlayer}
-        joinRequest={myJoinRequest}
-        working={working}
-        onSend={handleSendJoinRequest}
-        onWithdraw={handleWithdrawJoinRequest}
-        onLeave={() => setConfirmingLeave(true)}
-      />
-
-      <div className="row g-4">
-        <div className="col-12 col-md-7">
-          <div className="card h-100">
-            <div className="card-header">Details</div>
-            <div className="card-body">
-              <dl className="row mb-0">
-                <dt className="col-5 col-sm-4">Sport</dt>
-                <dd className="col-7 col-sm-8">{game.sport}</dd>
-                <dt className="col-5 col-sm-4">City</dt>
-                <dd className="col-7 col-sm-8">{game.city}</dd>
-                <dt className="col-5 col-sm-4">Venue</dt>
-                <dd className="col-7 col-sm-8">{game.venue}</dd>
-                <dt className="col-5 col-sm-4">Start time</dt>
-                <dd className="col-7 col-sm-8">
-                  {formatDateTime(game.startTime)}
-                </dd>
-                <dt className="col-5 col-sm-4">Duration</dt>
-                <dd className="col-7 col-sm-8">{game.duration} min</dd>
-                <dt className="col-5 col-sm-4">Players</dt>
-                <dd className="col-7 col-sm-8">
-                  {game.playerCount} of {game.maxPlayers} ·{" "}
-                  {formatPlaces(game.placesLeft())}
-                </dd>
-                <dt className="col-5 col-sm-4">Notes</dt>
-                <dd className="col-7 col-sm-8 mb-0">
-                  {game.notes || <span className="text-muted">No notes</span>}
-                </dd>
-              </dl>
-            </div>
-          </div>
-        </div>
-        <div className="col-12 col-md-5">
-          <Weather game={game} />
-        </div>
-      </div>
-
-      <div className="mt-4">
-        {teamError && <div className="alert alert-danger">{teamError}</div>}
-        <Teams
-          game={game}
-          players={players}
-          myPlayer={myPlayer}
-          canArrange={game.canBeChangedBy(user)}
-          canRemove={game.playersCanBeRemovedBy(user)}
-          working={working}
-          onMove={handleMovePlayer}
-          onRemove={setPlayerToRemove}
-        />
-      </div>
-
-      {game.showsJoinRequestsTo(user) && (
-        <div className="row mt-4">
-          <div className="col-12 col-lg-6">
-            <PendingJoinRequests
-              joinRequests={pendingJoinRequests}
-              canAnswer={game.canBeChangedBy(user)}
-              working={working}
-              onAccept={handleAcceptJoinRequest}
-              onDecline={setJoinRequestToDecline}
+      <div className="container page-body">
+        {/* The facts of the game, one tile each */}
+        <div className="row g-3 mb-4">
+          <div className="col-6 col-lg-2">
+            <Stat
+              label="Start time"
+              value={formatTime(game.startTime)}
+              note={formatShortDate(game.startTime)}
             />
           </div>
-        </div>
-      )}
-
-      {showsChat && (
-        <div className="row mt-4">
-          <div className="col-12 col-lg-7">
-            <Chat gameId={id} user={user} canPost={isPlayer} />
+          <div className="col-6 col-lg-2">
+            <Stat label="Duration" value={`${game.duration} min`} />
+          </div>
+          <div className="col-12 col-sm-6 col-lg-4">
+            <Stat label="Venue" value={game.venue} note={game.city} />
+          </div>
+          <div className="col-12 col-sm-6 col-lg-4">
+            <Stat
+              label="Players"
+              value={`${game.playerCount} of ${game.maxPlayers}`}
+              note={formatPlaces(game.placesLeft())}
+            >
+              <div className="progress">
+                <div
+                  className="progress-bar"
+                  style={{ width: `${placesTaken}%` }}
+                ></div>
+              </div>
+            </Stat>
           </div>
         </div>
-      )}
 
-      {joinRequestToDecline && (
-        <Modal
-          title="Decline this join request?"
-          text={`${joinRequestToDecline.username()} will not be able to send another join request to this game. This cannot be undone.`}
-          confirmLabel="Decline"
-          cancelLabel="Go back"
-          confirmVariant="danger"
-          onConfirm={handleDeclineJoinRequest}
-          onClose={() => setJoinRequestToDecline(null)}
-        />
-      )}
+        {cancelError && <div className="alert alert-danger">{cancelError}</div>}
+        {joinError && <div className="alert alert-danger">{joinError}</div>}
 
-      {confirmingLeave && (
-        <Modal
-          title="Leave this game?"
-          text="Your place will be freed for someone else. You can send a new join request later, if the game is not full by then."
-          confirmLabel="Leave game"
-          cancelLabel="Stay"
-          confirmVariant="danger"
-          onConfirm={handleLeaveGame}
-          onClose={() => setConfirmingLeave(false)}
+        <JoinPanel
+          user={user}
+          game={game}
+          isPlayer={isPlayer}
+          joinRequest={myJoinRequest}
+          working={working}
+          onSend={handleSendJoinRequest}
+          onWithdraw={handleWithdrawJoinRequest}
+          onLeave={() => setConfirmingLeave(true)}
         />
-      )}
 
-      {playerToRemove && (
-        <Modal
-          title="Remove this player?"
-          text={`${playerToRemove.username()} will lose their place in this game. They can send a new join request later.`}
-          confirmLabel="Remove"
-          cancelLabel="Go back"
-          confirmVariant="danger"
-          onConfirm={handleRemovePlayer}
-          onClose={() => setPlayerToRemove(null)}
-        />
-      )}
+        <div className="row g-4">
+          <div className="col-12 col-md-7">
+            <div className="card h-100">
+              <div className="card-header">Notes from the organizer</div>
+              <div className="card-body">
+                {/* text-break keeps one very long word inside the card */}
+                <p className="mb-0 text-break">
+                  {game.notes || <span className="text-muted">No notes</span>}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="col-12 col-md-5">
+            <Weather game={game} />
+          </div>
+        </div>
 
-      {confirmingCancel && (
-        <Modal
-          title="Cancel this game?"
-          text={`${game.sport} in ${game.city} on ${formatDateTime(game.startTime)} will be deleted together with its join requests, players and chat messages. This cannot be undone.`}
-          confirmLabel="Cancel game"
-          cancelLabel="Keep game"
-          confirmVariant="danger"
-          onConfirm={handleCancelGame}
-          onClose={() => setConfirmingCancel(false)}
-        />
-      )}
-    </div>
+        <div className="mt-4">
+          {teamError && <div className="alert alert-danger">{teamError}</div>}
+          <Teams
+            game={game}
+            players={players}
+            myPlayer={myPlayer}
+            canArrange={game.canBeChangedBy(user)}
+            canRemove={game.playersCanBeRemovedBy(user)}
+            working={working}
+            onMove={handleMovePlayer}
+            onRemove={setPlayerToRemove}
+          />
+        </div>
+
+        {/* The chat and the pending join requests share a row when the user
+            may see both */}
+        <div className="row g-4 mt-0">
+          {showsChat && (
+            <div className="col-12 col-lg-7">
+              <Chat gameId={id} user={user} canPost={isPlayer} />
+            </div>
+          )}
+          {game.showsJoinRequestsTo(user) && (
+            <div className="col-12 col-lg-5">
+              <PendingJoinRequests
+                joinRequests={pendingJoinRequests}
+                canAnswer={game.canBeChangedBy(user)}
+                working={working}
+                onAccept={handleAcceptJoinRequest}
+                onDecline={setJoinRequestToDecline}
+              />
+            </div>
+          )}
+        </div>
+
+        {joinRequestToDecline && (
+          <Modal
+            title="Decline this join request?"
+            text={`${joinRequestToDecline.username()} will not be able to send another join request to this game. This cannot be undone.`}
+            confirmLabel="Decline"
+            cancelLabel="Go back"
+            confirmVariant="danger"
+            onConfirm={handleDeclineJoinRequest}
+            onClose={() => setJoinRequestToDecline(null)}
+          />
+        )}
+
+        {confirmingLeave && (
+          <Modal
+            title="Leave this game?"
+            text="Your place will be freed for someone else. You can send a new join request later, if the game is not full by then."
+            confirmLabel="Leave game"
+            cancelLabel="Stay"
+            confirmVariant="danger"
+            onConfirm={handleLeaveGame}
+            onClose={() => setConfirmingLeave(false)}
+          />
+        )}
+
+        {playerToRemove && (
+          <Modal
+            title="Remove this player?"
+            text={`${playerToRemove.username()} will lose their place in this game. They can send a new join request later.`}
+            confirmLabel="Remove"
+            cancelLabel="Go back"
+            confirmVariant="danger"
+            onConfirm={handleRemovePlayer}
+            onClose={() => setPlayerToRemove(null)}
+          />
+        )}
+
+        {confirmingCancel && (
+          <Modal
+            title="Cancel this game?"
+            text={`${game.sport} in ${game.city} on ${formatDateTime(game.startTime)} will be deleted together with its join requests, players and chat messages. This cannot be undone.`}
+            confirmLabel="Cancel game"
+            cancelLabel="Keep game"
+            confirmVariant="danger"
+            onConfirm={handleCancelGame}
+            onClose={() => setConfirmingCancel(false)}
+          />
+        )}
+      </div>
+    </>
   );
 };
 

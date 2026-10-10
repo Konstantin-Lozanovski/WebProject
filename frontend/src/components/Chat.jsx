@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Modal from "./Modal.jsx";
+import Avatar from "./Avatar.jsx";
 import { fetchMessages, postMessage, deleteMessage } from "../services/api.js";
 
 // How often the chat asks the server for its messages, in milliseconds
@@ -48,6 +49,8 @@ const Chat = ({ gameId, user, canPost }) => {
   const [sending, setSending] = useState(false);
   // The message waiting in the "Delete?" popup, or null
   const [messageToDelete, setMessageToDelete] = useState(null);
+  // The box the messages scroll in
+  const listRef = useRef(null);
 
   useEffect(() => {
     // Nothing more to ask for, so the requests stop
@@ -84,6 +87,21 @@ const Chat = ({ gameId, user, canPost }) => {
     // stop with it
     return () => clearInterval(timer);
   }, [gameId, closed]);
+
+  // The newest message is the last one, so the box is scrolled to its end
+  // when a message arrives. It follows the number of messages and not the
+  // list itself, which is new after every refresh even when nothing changed.
+  useEffect(() => {
+    const list = listRef.current;
+    // The box is not on the page once the chat is closed
+    if (list) list.scrollTop = list.scrollHeight;
+  }, [messages.length]);
+
+  // The user is missing when their account was deleted
+  const isMine = (message) => {
+    if (!message.user) return false;
+    return message.user._id === user._id;
+  };
 
   const handleSubmit = async (e) => {
     // Stops the browser from reloading the page, which is what a form does
@@ -138,7 +156,7 @@ const Chat = ({ gameId, user, canPost }) => {
   if (closed) {
     return (
       <>
-        <h2 className="h4 mb-3">Chat</h2>
+        <h2 className="section-title">Chat</h2>
         <div className="alert alert-danger">{loadError}</div>
       </>
     );
@@ -146,39 +164,44 @@ const Chat = ({ gameId, user, canPost }) => {
 
   return (
     <>
-      <h2 className="h4 mb-3">Chat</h2>
+      <h2 className="section-title">Chat</h2>
       {loadError && <div className="alert alert-danger">{loadError}</div>}
       {actionError && <div className="alert alert-danger">{actionError}</div>}
       <div className="card">
-        {messages.length === 0 && (
-          <div className="card-body text-muted">No messages yet.</div>
-        )}
-        <ul className="list-group list-group-flush">
+        <ul className="chat-messages" ref={listRef}>
+          {messages.length === 0 && (
+            <li className="text-muted text-center my-auto">No messages yet.</li>
+          )}
           {messages.map((message) => (
-            <li className="list-group-item" key={message._id}>
-              <div className="d-flex justify-content-between">
-                <strong>{message.username()}</strong>
-                <small className="text-muted">
+            <li
+              className={`chat-message ${isMine(message) ? "is-mine" : ""}`}
+              key={message._id}
+            >
+              <Avatar name={message.username()} />
+              <div>
+                <div className="chat-meta">
+                  <strong>{message.username()}</strong> ·{" "}
                   {timeAgo(message.createdAt)}
-                </small>
-              </div>
-              <div className="d-flex justify-content-between align-items-start gap-2">
-                {/* text-break keeps one very long word inside the card */}
-                <span className="text-break">{message.text}</span>
-                {message.canBeDeletedBy(user) && (
-                  <button
-                    className="btn btn-link btn-sm text-danger p-0"
-                    type="button"
-                    onClick={() => setMessageToDelete(message)}
-                  >
-                    Delete
-                  </button>
-                )}
+                  {message.canBeDeletedBy(user) && (
+                    <>
+                      {" · "}
+                      <button
+                        className="btn btn-link text-danger chat-delete"
+                        type="button"
+                        onClick={() => setMessageToDelete(message)}
+                      >
+                        Delete
+                      </button>
+                    </>
+                  )}
+                </div>
+                {/* text-break keeps one very long word inside the bubble */}
+                <div className="chat-bubble text-break">{message.text}</div>
               </div>
             </li>
           ))}
         </ul>
-        <div className="card-body">
+        <div className="card-body border-top">
           {canPost ? (
             <form className="input-group" onSubmit={handleSubmit} noValidate>
               <input

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import BouncingBalls from "./BouncingBalls.jsx";
 
 // What the app is for, in the order a new user does it
 const STEPS = [
@@ -58,22 +59,10 @@ const Hero = ({ user }) => {
             <div className="d-flex flex-wrap gap-2">{renderButtons()}</div>
           </div>
 
-          {/* Only decoration, so it is hidden from screen readers (empty alt,
-              aria-hidden) and on phones, where it would push the games down */}
+          {/* Only decoration, so it is hidden on phones, where it would push
+              the games down */}
           <div className="col-md-5 d-none d-md-block">
-            <div className="hero-art" aria-hidden="true">
-              <div className="hero-ball">
-                <img src="/ball-football.svg" alt="" />
-              </div>
-              {/* The basketball is the app's logo, the same file as the icon
-                  of the browser tab */}
-              <div className="hero-ball hero-ball-high">
-                <img src="/favicon.svg" alt="" />
-              </div>
-              <div className="hero-ball hero-ball-quick">
-                <img src="/ball-tennis.svg" alt="" />
-              </div>
-            </div>
+            <BouncingBalls />
           </div>
         </div>
 

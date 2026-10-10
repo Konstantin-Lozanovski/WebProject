@@ -76,7 +76,7 @@ const Teams = ({
 
   return (
     <>
-      <h2 className="h4 mb-3">Teams</h2>
+      <h2 className="section-title">Teams</h2>
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <div className="row g-3">
           {COLUMNS.map((column) => {

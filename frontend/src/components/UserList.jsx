@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Modal from "./Modal.jsx";
+import Avatar from "./Avatar.jsx";
 import { fetchUsers, updateUserRole, deleteUser } from "../services/api.js";
 import { ROLES, ROLE_LABELS } from "../models/User.js";
 
@@ -87,8 +88,11 @@ const UserList = ({ user, onDelete }) => {
     return (
       <tr key={listedUser._id}>
         <td>
-          {listedUser.username}{" "}
-          {isMe && <span className="badge text-bg-dark">You</span>}
+          <span className="d-flex align-items-center gap-2">
+            <Avatar name={listedUser.username} />
+            {listedUser.username}
+            {isMe && <span className="badge text-bg-dark">You</span>}
+          </span>
         </td>
         <td>{listedUser.email}</td>
         <td>
@@ -143,7 +147,7 @@ const UserList = ({ user, onDelete }) => {
 
   return (
     <>
-      <h2 className="h4 mb-3">Users</h2>
+      <h2 className="section-title">Users</h2>
       {actionError && <div className="alert alert-danger">{actionError}</div>}
       {renderTable()}
 

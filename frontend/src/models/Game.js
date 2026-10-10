@@ -26,6 +26,16 @@ export const STATUS_BADGES = {
   finished: { label: "Finished", variant: "secondary" },
 };
 
+// The picture of each sport's ball, from the public folder. Padel is played
+// with a ball that looks like the tennis one, and the basketball is the logo.
+export const SPORT_BALLS = {
+  Football: "/ball-football.svg",
+  Basketball: "/favicon.svg",
+  Volleyball: "/ball-volleyball.svg",
+  Tennis: "/ball-tennis.svg",
+  Padel: "/ball-tennis.svg",
+};
+
 const HOUR = 60 * 60 * 1000;
 
 // Mirrors the game the API returns

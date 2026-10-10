@@ -22,8 +22,9 @@ const TeamColumn = ({ team, title, size, playerCount, hint, children }) => {
   }
 
   return (
+    // "team-A", "team-B" or "team-unassigned" gives the column its colour
     <div
-      className={`card h-100 team-column ${isOver ? "is-over" : ""}`}
+      className={`card h-100 team-column team-${team} ${isOver ? "is-over" : ""}`}
       ref={setNodeRef}
     >
       <div className="card-header">
@@ -35,7 +36,7 @@ const TeamColumn = ({ team, title, size, playerCount, hint, children }) => {
       <ul className="list-group list-group-flush">
         {children}
         {freeSpaces.map((space) => (
-          <li className="list-group-item text-muted bg-light" key={space}>
+          <li className="free-space" key={space}>
             Free space
           </li>
         ))}

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import Hero from "../components/Hero.jsx";
 import GameCard from "../components/GameCard.jsx";
+import EmptyState from "../components/EmptyState.jsx";
 import BarChart from "../components/BarChart.jsx";
 import { fetchUpcomingGames, fetchSportCounts } from "../services/api.js";
 import { SPORTS, CITIES } from "../models/Game.js";
@@ -125,26 +126,19 @@ const Home = ({ user }) => {
 
     if (games.length === 0 && hasFilters) {
       return (
-        <div className="card mb-3">
-          <div className="card-body">
-            <h2 className="h5 mb-1">No games found</h2>
-            <p className="text-muted mb-0">
-              No upcoming game matches these filters. Try changing or clearing
-              them.
-            </p>
-          </div>
-        </div>
+        <EmptyState
+          title="No games found"
+          text="No upcoming game matches these filters. Try changing or clearing them."
+        />
       );
     }
 
     if (games.length === 0) {
       return (
-        <div className="card mb-3">
-          <div className="card-body">
-            <h2 className="h5 mb-1">No upcoming games</h2>
-            <p className="text-muted mb-0">There is no game to join right now.</p>
-          </div>
-        </div>
+        <EmptyState
+          title="No upcoming games"
+          text="There is no game to join right now."
+        />
       );
     }
 

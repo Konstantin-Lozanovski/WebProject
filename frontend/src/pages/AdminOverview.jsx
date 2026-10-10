@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import PageHeader from "../components/PageHeader.jsx";
+import EmptyState from "../components/EmptyState.jsx";
 import Modal from "../components/Modal.jsx";
 import UserList from "../components/UserList.jsx";
 import { fetchTotals, fetchAllGames, deleteGame } from "../services/api.js";
@@ -84,47 +86,46 @@ const AdminOverview = ({ user }) => {
     setWorking(false);
   };
 
+  // Three cards of numbers: the users, the games of each status and the
+  // join requests of each state
   const renderTotals = () => {
     return (
       <div className="row g-3 mb-4">
-        <div className="col-12 col-md-4">
+        <div className="col-12 col-lg-2">
           <div className="card h-100">
             <div className="card-header">Users</div>
-            <div className="card-body">
-              <p className="display-6 mb-0">{totals.users}</p>
+            <div className="card-body stat-group">
+              <div>
+                <div className="stat-value">{totals.users}</div>
+                <div className="stat-label">Accounts</div>
+              </div>
             </div>
           </div>
         </div>
-        <div className="col-12 col-md-4">
+        <div className="col-12 col-md-6 col-lg-5">
           <div className="card h-100">
             <div className="card-header">Games by status</div>
-            <ul className="list-group list-group-flush">
+            <div className="card-body stat-group">
               {STATUSES.map((status) => (
-                <li
-                  className="list-group-item d-flex justify-content-between"
-                  key={status}
-                >
-                  {STATUS_BADGES[status].label}
-                  <strong>{totals.games[status]}</strong>
-                </li>
+                <div key={status}>
+                  <div className="stat-value">{totals.games[status]}</div>
+                  <div className="stat-label">{STATUS_BADGES[status].label}</div>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         </div>
-        <div className="col-12 col-md-4">
+        <div className="col-12 col-md-6 col-lg-5">
           <div className="card h-100">
             <div className="card-header">Join requests by state</div>
-            <ul className="list-group list-group-flush">
+            <div className="card-body stat-group">
               {STATES.map((state) => (
-                <li
-                  className="list-group-item d-flex justify-content-between"
-                  key={state}
-                >
-                  {STATE_BADGES[state].label}
-                  <strong>{totals.joinRequests[state]}</strong>
-                </li>
+                <div key={state}>
+                  <div className="stat-value">{totals.joinRequests[state]}</div>
+                  <div className="stat-label">{STATE_BADGES[state].label}</div>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         </div>
       </div>
@@ -175,7 +176,7 @@ const AdminOverview = ({ user }) => {
 
   const renderGames = () => {
     if (games.length === 0) {
-      return <p className="text-muted mb-4">There are no games yet.</p>;
+      return <EmptyState title="No games" text="There are no games yet." />;
     }
 
     // table-responsive lets the wide table scroll sideways on a phone;
@@ -209,7 +210,7 @@ const AdminOverview = ({ user }) => {
       <>
         {renderTotals()}
 
-        <h2 className="h4 mb-3">Games</h2>
+        <h2 className="section-title">Games</h2>
         {actionError && <div className="alert alert-danger">{actionError}</div>}
         {renderGames()}
       </>
@@ -217,27 +218,31 @@ const AdminOverview = ({ user }) => {
   };
 
   return (
-    <div className="container py-4">
-      <h1 className="h2 mb-4">Admin overview</h1>
+    <>
+      <PageHeader
+        title="Admin overview"
+        text="Every game and every user of the app. An admin can change or delete any of them at any time."
+      />
+      <div className="container page-body">
+        {renderOverview()}
 
-      {renderOverview()}
+        {/* The list loads its own users, so it still works when the totals
+            and the games above could not be loaded */}
+        <UserList user={user} onDelete={refreshOverview} />
 
-      {/* The list loads its own users, so it still works when the totals
-          and the games above could not be loaded */}
-      <UserList user={user} onDelete={refreshOverview} />
-
-      {gameToDelete && (
-        <Modal
-          title="Delete this game?"
-          text={`${gameToDelete.sport} in ${gameToDelete.city} on ${formatDateTime(gameToDelete.startTime)} will be deleted together with its join requests, players and chat messages. This cannot be undone.`}
-          confirmLabel="Delete game"
-          cancelLabel="Keep game"
-          confirmVariant="danger"
-          onConfirm={handleDeleteGame}
-          onClose={() => setGameToDelete(null)}
-        />
-      )}
-    </div>
+        {gameToDelete && (
+          <Modal
+            title="Delete this game?"
+            text={`${gameToDelete.sport} in ${gameToDelete.city} on ${formatDateTime(gameToDelete.startTime)} will be deleted together with its join requests, players and chat messages. This cannot be undone.`}
+            confirmLabel="Delete game"
+            cancelLabel="Keep game"
+            confirmVariant="danger"
+            onConfirm={handleDeleteGame}
+            onClose={() => setGameToDelete(null)}
+          />
+        )}
+      </div>
+    </>
   );
 };
 

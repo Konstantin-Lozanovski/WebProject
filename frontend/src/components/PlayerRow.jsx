@@ -1,4 +1,5 @@
 import { useDraggable } from "@dnd-kit/core";
+import Avatar from "./Avatar.jsx";
 
 // One player in a column of the teams view.
 // canDrag says whether this row can be picked up and dropped on a column.
@@ -21,8 +22,9 @@ const PlayerRow = ({
 
   const content = (
     <>
-      <span>
-        {player.username()}{" "}
+      <span className="d-flex flex-wrap align-items-center gap-2">
+        <Avatar name={player.username()} />
+        {player.username()}
         {isOrganizer && <span className="badge text-bg-dark">Organizer</span>}
       </span>
       {showRemove && (

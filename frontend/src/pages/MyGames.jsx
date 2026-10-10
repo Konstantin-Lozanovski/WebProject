@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import PageHeader from "../components/PageHeader.jsx";
+import Stat from "../components/Stat.jsx";
+import EmptyState from "../components/EmptyState.jsx";
+import GameCard from "../components/GameCard.jsx";
 import BarChart from "../components/BarChart.jsx";
 import {
   fetchMyGames,
@@ -7,11 +11,7 @@ import {
   fetchMyMonthCounts,
 } from "../services/api.js";
 import { STATE_BADGES } from "../models/JoinRequest.js";
-import {
-  formatDateTime,
-  formatPlaces,
-  getPlacesClass,
-} from "../services/helpers.js";
+import { formatDateTime } from "../services/helpers.js";
 
 // "2026-10" becomes "October"
 const formatMonth = (month) => {
@@ -68,70 +68,44 @@ const MyGames = ({ user }) => {
     // nothing here that could change and ask for a new load
   }, []);
 
-  // What stands at the right of a current game: the places left, or the
-  // badge of a game that has already started
-  const renderGameSide = (game) => {
-    if (game.status === "in progress") {
-      return <span className="badge text-bg-success">In progress</span>;
-    }
-
-    const placesLeft = game.placesLeft();
-    return (
-      <span className={`places ${getPlacesClass(placesLeft)}`}>
-        {formatPlaces(placesLeft)}
-      </span>
-    );
-  };
-
-  // One game of either list. Only a current game gets something at the right.
-  const renderGame = (game, isCurrent) => {
-    return (
-      <Link
-        className="list-group-item list-group-item-action d-flex flex-wrap justify-content-between align-items-center gap-2"
-        key={game._id}
-        to={`/games/${game._id}`}
-      >
-        <div>
-          <strong>
-            {game.sport} in {game.city}
-          </strong>{" "}
-          {game.isOrganizedBy(user) && (
-            <span className="badge text-bg-dark">Organizer</span>
-          )}
-          <br />
-          <small className="text-muted">
-            {game.venue} · {formatDateTime(game.startTime)} · {game.duration} min
-          </small>
-        </div>
-        {isCurrent && renderGameSide(game)}
-      </Link>
-    );
-  };
-
   const renderCurrentGames = () => {
     if (currentGames.length === 0) {
       return (
-        <p className="text-muted mb-4">
-          You are not a player in any upcoming game.
-        </p>
+        <EmptyState
+          title="No upcoming games"
+          text="You are not a player in any upcoming game."
+        >
+          <Link className="btn btn-primary btn-sm" to="/">
+            Find a game
+          </Link>
+        </EmptyState>
       );
     }
 
     return (
-      <div className="list-group mb-4">
-        {currentGames.map((game) => renderGame(game, true))}
+      <div className="mb-4">
+        {currentGames.map((game) => (
+          <GameCard key={game._id} game={game} user={user} />
+        ))}
       </div>
     );
   };
 
   const renderFinishedGames = () => {
     if (finishedGames.length === 0) {
-      return <p className="text-muted mb-4">You have no finished games yet.</p>;
+      return (
+        <EmptyState
+          title="No finished games"
+          text="You have no finished games yet."
+        />
+      );
     }
 
     return (
-      <div className="list-group mb-4">
-        {finishedGames.map((game) => renderGame(game, false))}
+      <div className="mb-4">
+        {finishedGames.map((game) => (
+          <GameCard key={game._id} game={game} user={user} />
+        ))}
       </div>
     );
   };
@@ -159,7 +133,12 @@ const MyGames = ({ user }) => {
 
   const renderJoinRequests = () => {
     if (joinRequests.length === 0) {
-      return <p className="text-muted">You have not sent any join requests.</p>;
+      return (
+        <EmptyState
+          title="No join requests"
+          text="You have not sent any join requests."
+        />
+      );
     }
 
     return (
@@ -184,15 +163,50 @@ const MyGames = ({ user }) => {
 
     return (
       <>
-        <h2 className="h4 mb-3">Upcoming games</h2>
+        <h2 className="section-title">Upcoming games</h2>
         {renderCurrentGames()}
 
-        <h2 className="h4 mb-3">Finished games</h2>
+        <h2 className="section-title">Finished games</h2>
         {renderFinishedGames()}
 
-        <h2 className="h4 mb-3">My join requests</h2>
+        <h2 className="section-title">My join requests</h2>
         {renderJoinRequests()}
       </>
+    );
+  };
+
+  // The three numbers at the top of the page. Nothing until the lists arrived.
+  const renderStats = () => {
+    if (loading || loadError) return null;
+
+    const pendingJoinRequests = joinRequests.filter((joinRequest) => {
+      return joinRequest.isPending();
+    });
+
+    return (
+      <div className="row g-3 mb-4">
+        <div className="col-12 col-sm-4">
+          <Stat
+            label="Upcoming games"
+            value={currentGames.length}
+            note="you are a player in"
+          />
+        </div>
+        <div className="col-12 col-sm-4">
+          <Stat
+            label="Finished games"
+            value={finishedGames.length}
+            note="played so far"
+          />
+        </div>
+        <div className="col-12 col-sm-4">
+          <Stat
+            label="Pending join requests"
+            value={pendingJoinRequests.length}
+            note="waiting for an organizer"
+          />
+        </div>
+      </div>
     );
   };
 
@@ -211,15 +225,25 @@ const MyGames = ({ user }) => {
   };
 
   return (
-    <div className="container py-4">
-      <h1 className="h2 mb-4">My games</h1>
+    <>
+      <PageHeader
+        title="My games"
+        text="The games you are a player in and the join requests you sent."
+      >
+        <Link className="btn btn-light" to="/games/new">
+          Create a game
+        </Link>
+      </PageHeader>
+      <div className="container page-body">
+        {renderStats()}
 
-      <div className="row g-4">
-        <div className="col-12 col-lg-8">{renderLists()}</div>
+        <div className="row g-4">
+          <div className="col-12 col-lg-8">{renderLists()}</div>
 
-        <div className="col-12 col-lg-4">{renderChart()}</div>
+          <div className="col-12 col-lg-4">{renderChart()}</div>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
