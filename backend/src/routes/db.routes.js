@@ -50,7 +50,7 @@ router.delete("/", deleteAllData);
  *                   example: Initial data seeded
  *                 counts:
  *                   type: object
- *                   example: { users: 7 }
+ *                   example: { users: 7, games: 9, players: 9 }
  *       500:
  *         description: The demo data could not be created
  *         content:

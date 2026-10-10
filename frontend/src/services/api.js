@@ -1,5 +1,7 @@
 import axiosInstance from "./axiosInstance.js";
 import User from "../models/User.js";
+import Game from "../models/Game.js";
+import Player from "../models/Player.js";
 
 // GET /api/status
 export const fetchStatus = async () => {
@@ -38,4 +40,34 @@ export const deleteAllData = async () => {
 export const seedInitialData = async () => {
   const response = await axiosInstance.post("/db/seed");
   return response.data;
+};
+
+// GET /api/games?sport=...&city=...&date=...
+// Each filter is text; "" means it was not chosen
+export const fetchUpcomingGames = async (sport, city, date) => {
+  // Only the chosen filters are sent: the server reads a missing filter as
+  // "any", but refuses an empty one
+  const params = {};
+  if (sport) params.sport = sport;
+  if (city) params.city = city;
+  if (date) params.date = date;
+
+  // axios writes params after the ? in the address
+  const response = await axiosInstance.get("/games", { params });
+  return response.data.games.map((game) => new Game(game));
+};
+
+// GET /api/games/:id
+export const fetchGame = async (gameId) => {
+  const response = await axiosInstance.get(`/games/${gameId}`);
+  return {
+    game: new Game(response.data.game),
+    players: response.data.players.map((player) => new Player(player)),
+  };
+};
+
+// POST /api/games
+export const createGame = async (gameData) => {
+  const response = await axiosInstance.post("/games", gameData);
+  return new Game(response.data.game);
 };

@@ -3,6 +3,8 @@ import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import Database from "./pages/Database.jsx";
+import CreateGame from "./pages/CreateGame.jsx";
+import GamePage from "./pages/GamePage.jsx";
 import NotFound from "./pages/NotFound.jsx";
 
 // All client-side routes live in this module, apart from the main app module.
@@ -22,6 +24,13 @@ const AppRoutes = ({ user, onLogin, onLogout }) => {
           user ? <Navigate to="/" replace /> : <Register onLogin={onLogin} />
         }
       />
+      {/* A guest who types this address is sent to log in; the API would
+          refuse them anyway */}
+      <Route
+        path="/games/new"
+        element={user ? <CreateGame /> : <Navigate to="/login" replace />}
+      />
+      <Route path="/games/:id" element={<GamePage />} />
       {/* Open to everyone: after "delete all" there is no admin to log in as */}
       <Route path="/db" element={<Database onLogout={onLogout} />} />
       {/* "*" catches every address that no other route matched */}

@@ -25,6 +25,59 @@ const options = {
             createdAt: { type: "string", format: "date-time" },
           },
         },
+        Game: {
+          type: "object",
+          properties: {
+            _id: { type: "string", example: "66f1c0a4e3b2a1d4c5f6a7b9" },
+            organizer: {
+              type: "object",
+              properties: {
+                _id: { type: "string", example: "66f1c0a4e3b2a1d4c5f6a7b8" },
+                username: { type: "string", example: "marko_7" },
+              },
+            },
+            sport: {
+              type: "string",
+              enum: ["Football", "Basketball", "Volleyball", "Tennis", "Padel"],
+            },
+            city: { type: "string", example: "Skopje" },
+            venue: {
+              type: "string",
+              example: "Sports Center Boris Trajkovski, pitch 2",
+            },
+            startTime: { type: "string", format: "date-time" },
+            duration: { type: "integer", enum: [60, 90, 120] },
+            maxPlayers: { type: "integer", example: 10 },
+            notes: { type: "string", example: "Bring a white and a dark shirt." },
+            status: {
+              type: "string",
+              enum: ["upcoming", "in progress", "finished"],
+              description: "Calculated from the current time, not stored",
+            },
+            playerCount: {
+              type: "integer",
+              description: "How many players the game has, the organizer included",
+              example: 7,
+            },
+            createdAt: { type: "string", format: "date-time" },
+          },
+        },
+        Player: {
+          type: "object",
+          properties: {
+            _id: { type: "string", example: "66f1c0a4e3b2a1d4c5f6a7ba" },
+            user: {
+              type: "object",
+              properties: {
+                _id: { type: "string", example: "66f1c0a4e3b2a1d4c5f6a7b8" },
+                username: { type: "string", example: "marko_7" },
+              },
+            },
+            game: { type: "string", example: "66f1c0a4e3b2a1d4c5f6a7b9" },
+            team: { type: "string", enum: ["A", "B", "unassigned"] },
+            createdAt: { type: "string", format: "date-time" },
+          },
+        },
         AuthResponse: {
           type: "object",
           properties: {

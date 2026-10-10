@@ -113,7 +113,7 @@ const Database = ({ onLogout }) => {
               <h2 className="h5">Seed initial data</h2>
               <p>
                 Clears the database first, then adds the initial data: one
-                admin and several users.
+                admin, several users and games in every status.
               </p>
               <button
                 className="btn btn-primary mt-auto align-self-start"

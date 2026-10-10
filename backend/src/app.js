@@ -3,6 +3,7 @@ import statusRoutes from "./routes/status.routes.js";
 import docsRoutes from "./routes/docs.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import dbRoutes from "./routes/db.routes.js";
+import gameRoutes from "./routes/game.routes.js";
 import notFoundMiddleware from "./middleware/not-found.js";
 import errorHandlerMiddleware from "./middleware/error-handler.js";
 
@@ -13,6 +14,7 @@ app.use(express.json());
 app.use("/api/status", statusRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/db", dbRoutes);
+app.use("/api/games", gameRoutes);
 app.use("/api", docsRoutes);
 
 // Order matters: these two come after every route, so they only see
