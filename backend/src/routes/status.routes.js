@@ -8,6 +8,7 @@ const router = express.Router();
  * /api/status:
  *   get:
  *     summary: Check that the API is running
+ *     description: Open to everyone, no token needed. Also says whether the backend is connected to the database.
  *     tags: [Status]
  *     responses:
  *       200:

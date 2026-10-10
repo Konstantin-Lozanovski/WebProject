@@ -15,6 +15,7 @@ const router = express.Router();
  * /api/auth/register:
  *   post:
  *     summary: Register a new user and log them in
+ *     description: Open to everyone, no token needed. The new account always gets the role user; admins come from the seed data or from another admin promoting them. A welcome email is sent to the new user.
  *     tags: [Authentication]
  *     requestBody:
  *       required: true
@@ -62,6 +63,7 @@ router.post("/register", registerRules, validate, register);
  * /api/auth/login:
  *   post:
  *     summary: Log in with email and password
+ *     description: Open to everyone, no token needed. The token in the answer is sent with every later request that needs a logged-in user.
  *     tags: [Authentication]
  *     requestBody:
  *       required: true
@@ -104,6 +106,7 @@ router.post("/login", loginRules, validate, login);
  * /api/auth/me:
  *   get:
  *     summary: Get the user the token belongs to
+ *     description: For logged-in users. The user is read from the database and not from the token, so the answer has their current role.
  *     tags: [Authentication]
  *     security:
  *       - bearerAuth: []
