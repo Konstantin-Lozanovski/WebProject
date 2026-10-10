@@ -14,6 +14,9 @@
   --line: #c3ccd6;
   --accent: #4f6f8c;
   --accent-dark: #3f5a73;
+  --topbar: #2c3a48;
+  /* The orange of the basketball in the logo */
+  --ball: #e08a3c;
   --open: #3f7462;
   --few: #a56f2c;
   --danger: #a94a4a;
@@ -44,24 +47,86 @@ h2 {
 }
 
 /* ---------- Navigation and footer ---------- */
+/* Darker than the blue under it, so the navigation stands apart from the page */
 .topbar {
-  background: var(--accent);
+  background: var(--topbar);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
   --bs-navbar-color: #d2dde7;
   --bs-navbar-hover-color: #ffffff;
   --bs-navbar-active-color: #ffffff;
-  --bs-navbar-brand-font-size: 1.05rem;
+  --bs-navbar-brand-font-size: 1.2rem;
 }
 
 .topbar .navbar-brand {
-  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+}
+
+.brand-logo {
+  width: 1.9rem;
+  height: 1.9rem;
+  transition: transform 0.5s;
+}
+
+/* The ball rolls when the mouse is over the name */
+.navbar-brand:hover .brand-logo {
+  transform: rotate(180deg);
+}
+
+.brand-light {
+  font-weight: 400;
+  color: #d2dde7;
 }
 
 .topbar .nav-link {
   font-size: 0.92rem;
+  border-radius: 6px;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  transition: background-color 0.15s;
 }
 
+.topbar .nav-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* The page being viewed keeps the lighter background */
 .topbar .nav-link.active {
+  background: rgba(255, 255, 255, 0.16);
   font-weight: 600;
+}
+
+/* The logged-in user: a round letter, the username and the admin badge in one pill */
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem 0.75rem 0.2rem 0.2rem;
+  border-radius: 2rem;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.user-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Stays a circle when a long username squeezes the pill */
+  flex: none;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
+  background: var(--ball);
+  font-weight: 700;
+}
+
+/* A long username is cut with "..." instead of stretching the navigation */
+.user-name {
+  max-width: 10rem;
 }
 
 .footer {
@@ -71,8 +136,172 @@ h2 {
   font-size: 0.85rem;
 }
 
+/* ---------- Intro on the Home page ---------- */
+/* Starts in the colour of the navigation and ends in the colour of the
+   search band, so the three read as one block */
+.hero {
+  background: linear-gradient(180deg, var(--topbar), var(--accent));
+  color: #ffffff;
+  padding: 2.5rem 0 2rem;
+}
+
+.hero-text {
+  animation: rise 0.6s ease-out both;
+}
+
+.hero-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+}
+
+.hero-lead {
+  max-width: 34rem;
+  color: #d2dde7;
+}
+
+/* The three bouncing balls */
+.hero-art {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 2rem;
+  height: 11rem;
+}
+
+/* --time and --height are read by the two animations below, so one class
+   can make a ball quicker or higher without repeating the animations */
+.hero-ball {
+  --time: 0.6s;
+  --height: -5rem;
+  position: relative;
+}
+
+.hero-ball-high {
+  --time: 0.7s;
+  --height: -7rem;
+}
+
+.hero-ball-quick {
+  --time: 0.5s;
+  --height: -4rem;
+}
+
+/* "alternate" plays the animation forwards, then backwards. ease-out slows
+   the ball on the way up, so played backwards it speeds up on the way down,
+   the way a real ball does. */
+.hero-ball img {
+  display: block;
+  width: 3.5rem;
+  height: 3.5rem;
+  animation: bounce var(--time) ease-out infinite alternate;
+}
+
+/* The shadow on the ground, drawn without an element of its own */
+.hero-ball::after {
+  content: "";
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: -0.5rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  animation: shadow var(--time) ease-out infinite alternate;
+}
+
+@keyframes bounce {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(var(--height));
+  }
+}
+
+/* Smaller and fainter while the ball is up in the air */
+@keyframes shadow {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.5);
+    opacity: 0.4;
+  }
+}
+
+/* Used by the text and the steps: they fade in while moving up a little */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.step {
+  display: flex;
+  gap: 0.75rem;
+  height: 100%;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  animation: rise 0.6s ease-out both;
+}
+
+/* Each step starts a little after the one before it */
+.steps > :nth-child(2) .step {
+  animation-delay: 0.15s;
+}
+
+.steps > :nth-child(3) .step {
+  animation-delay: 0.3s;
+}
+
+.step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: #ffffff;
+  color: var(--accent-dark);
+  font-weight: 700;
+}
+
+.step-title {
+  margin-bottom: 0.15rem;
+  font-size: 1rem;
+}
+
+.step-text {
+  margin-bottom: 0;
+  font-size: 0.85rem;
+  color: #d2dde7;
+}
+
+/* Some people ask their system for less movement on the screen */
+@media (prefers-reduced-motion: reduce) {
+  .hero-text,
+  .hero-ball img,
+  .hero-ball::after,
+  .step {
+    animation: none;
+  }
+
+  .brand-logo {
+    transition: none;
+  }
+}
+
 /* ---------- Search band on the Home page ---------- */
-/* Same blue as the navigation, so the two read as one block; the thin line keeps them apart */
+/* Same blue as the end of the intro above; the thin line keeps them apart */
 .band {
   background: var(--accent);
   border-top: 1px solid rgba(255, 255, 255, 0.18);
@@ -89,7 +318,9 @@ h2 {
   border-color: transparent;
 }
 
-.band .btn-light {
+.band .btn-light,
+.hero .btn-light,
+.topbar .btn-light {
   color: #33506a;
   font-weight: 600;
 }
@@ -106,6 +337,12 @@ h2 {
   border-radius: 6px;
   box-shadow: var(--shadow);
   padding: 1rem 1.25rem;
+  transition: transform 0.15s;
+}
+
+/* The card under the mouse lifts a little */
+.game:hover {
+  transform: translateY(-2px);
 }
 
 .game.is-full {

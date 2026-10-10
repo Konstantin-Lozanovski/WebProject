@@ -11,10 +11,17 @@ const Navigation = ({ user, onLogout }) => {
   };
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark topbar">
+    // sticky-top keeps the navigation in view while the page scrolls
+    <nav className="navbar navbar-expand-lg navbar-dark topbar sticky-top">
       <div className="container">
         <Link className="navbar-brand" to="/">
-          Pickup Game Organizer
+          {/* Empty alt: the name next to it already says what the logo is */}
+          <img className="brand-logo" src="/favicon.svg" alt="" />
+          {/* One span around the whole name, so the gap between the logo
+              and the name does not also split "Pickup" from "Games" */}
+          <span>
+            Pickup<span className="brand-light">Games</span>
+          </span>
         </Link>
         <button
           className="navbar-toggler"
@@ -64,33 +71,37 @@ const Navigation = ({ user, onLogout }) => {
             </li>
           </ul>
           {user ? (
-            <ul className="navbar-nav">
-              <li className="nav-item">
-                <span className="navbar-text me-lg-2">{user.username}</span>
-              </li>
-              <li className="nav-item">
-                <button
-                  className="nav-link btn btn-link"
-                  type="button"
-                  onClick={handleLogout}
-                >
-                  Log out
-                </button>
-              </li>
-            </ul>
+            <div className="d-flex align-items-center gap-2 py-2 py-lg-0">
+              <div className="user-chip" title={`Logged in as ${user.username}`}>
+                {/* There are no profile pictures, so the first letter of the
+                    username stands in for one */}
+                <span className="user-avatar">
+                  {user.username.charAt(0).toUpperCase()}
+                </span>
+                <span className="user-name text-truncate">{user.username}</span>
+                {user.isAdmin() && (
+                  <span className="badge text-bg-warning">Admin</span>
+                )}
+              </div>
+              <button
+                className="btn btn-outline-light btn-sm"
+                type="button"
+                onClick={handleLogout}
+              >
+                Log out
+              </button>
+            </div>
           ) : (
-            <ul className="navbar-nav">
-              <li className="nav-item">
-                <NavLink className="nav-link" to="/login">
-                  Log in
-                </NavLink>
-              </li>
-              <li className="nav-item">
-                <NavLink className="nav-link" to="/register">
-                  Register
-                </NavLink>
-              </li>
-            </ul>
+            // navbar-nav gives the Log in link the colours of the other links;
+            // flex-row keeps the two next to each other on a phone too
+            <div className="navbar-nav flex-row align-items-center gap-2 py-2 py-lg-0">
+              <NavLink className="nav-link" to="/login">
+                Log in
+              </NavLink>
+              <Link className="btn btn-light btn-sm" to="/register">
+                Register
+              </Link>
+            </div>
           )}
         </div>
       </div>

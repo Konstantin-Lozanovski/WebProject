@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import Hero from "../components/Hero.jsx";
 import GameCard from "../components/GameCard.jsx";
 import BarChart from "../components/BarChart.jsx";
 import { fetchUpcomingGames, fetchSportCounts } from "../services/api.js";
@@ -8,7 +9,8 @@ import { SPORTS, CITIES } from "../models/Game.js";
 // What a date input gives: "2026-10-12"
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
-const Home = () => {
+// user is null for a guest
+const Home = ({ user }) => {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -151,11 +153,14 @@ const Home = () => {
 
   return (
     <>
-      {/* The title and the filters sit in a band under the navigation, so
+      <Hero user={user} />
+
+      {/* The title and the filters sit in a band under the intro, so
           the page below is only games */}
       <div className="band">
         <div className="container">
-          <h1 className="h3 mb-3">Upcoming games</h1>
+          {/* h2: the page's h1 is the title of the intro above */}
+          <h2 className="h3 mb-3">Upcoming games</h2>
           {/* Not a form: there is nothing to submit, every change searches
               right away */}
           <div className="row g-3 align-items-end">

@@ -23,7 +23,7 @@ const AppRoutes = ({ user, onLogin, onLogout }) => {
 
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<Home user={user} />} />
       {/* Someone who is already logged in has no use for these two screens */}
       <Route
         path="/login"
