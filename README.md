@@ -11,12 +11,12 @@ A web app for organizing and joining informal pickup sports games. A registered 
 
 **https://pickup-games.vercel.app**
 
-| What | Address |
-|---|---|
-| Home page | https://pickup-games.vercel.app/ |
-| Reset and seed the database | https://pickup-games.vercel.app/db |
-| API documentation (Swagger UI) | https://pickup-games.vercel.app/api/docs/ |
-| OpenAPI file | https://pickup-games.vercel.app/api/swagger.json |
+| What                           | Address                                          |
+| ------------------------------ | ------------------------------------------------ |
+| Home page                      | https://pickup-games.vercel.app/                 |
+| Reset and seed the database    | https://pickup-games.vercel.app/db               |
+| API documentation (Swagger UI) | https://pickup-games.vercel.app/api/docs/        |
+| OpenAPI file                   | https://pickup-games.vercel.app/api/swagger.json |
 
 The React app is on Vercel, the Express API on Render and the database on MongoDB Atlas. Everything is reached through the one Vercel address: Vercel forwards every `/api/...` call to the backend.
 
@@ -41,8 +41,6 @@ The only thing that has to be installed is [Docker Desktop](https://www.docker.c
    docker-compose up
    ```
 
-   (With a newer Docker the same command is written `docker compose up`.) The first run takes a few minutes, because it downloads the images and builds the app. It is ready when the log shows `Server is listening on port 5000`.
-
 5. Open **http://localhost:5173/** in a browser. This is the home page.
 6. The database starts empty. Open **http://localhost:5173/db**, press **Seed initial data** and confirm in the popup.
 7. Log in with one of the demo logins below.
@@ -57,11 +55,11 @@ After changing the code, run `docker-compose up --build` so the containers are b
 
 It starts three containers, one for each service in `docker-compose.yml`:
 
-| Service | What it is | Reached at |
-|---|---|---|
-| `mongo` | The virtualized MongoDB database (the official `mongo:7` image). Its data is kept in the Docker volume `mongo-data`, so it survives a restart. | only from inside Docker, not from the computer |
-| `backend` | The Express REST API. It connects to the `mongo` container. | http://localhost:5000 |
-| `frontend` | The built React app. It also forwards every `/api/...` call to the backend. | http://localhost:5173 |
+| Service    | What it is                                                                                                                                     | Reached at                                     |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `mongo`    | The virtualized MongoDB database (the official `mongo:7` image). Its data is kept in the Docker volume `mongo-data`, so it survives a restart. | only from inside Docker, not from the computer |
+| `backend`  | The Express REST API. It connects to the `mongo` container.                                                                                    | http://localhost:5000                          |
+| `frontend` | The built React app. It also forwards every `/api/...` call to the backend.                                                                    | http://localhost:5173                          |
 
 Everything is used through the frontend address, the same way as in the cloud:
 
@@ -86,24 +84,19 @@ docker-compose logs backend
 
 "Seed initial data" on the `/db` page creates these accounts. Login is by email and password.
 
-| Role | Username | Email | Password |
-|---|---|---|---|
-| Admin | `admin` | `admin@example.com` | `admin1234` |
-| User | `marko_p` | `marko@example.com` | `football1` |
-| User | `sara_b` | `sara@example.com` | `football1` |
-| User | `ivan_t` | `ivan@example.com` | `football1` |
-| User | `elena_k` | `elena@example.com` | `football1` |
-| User | `david_m` | `david@example.com` | `football1` |
-| User | `ana_s` | `ana@example.com` | `football1` |
-| User | `nikola_d` | `nikola@example.com` | `football1` |
-| User | `maja_r` | `maja@example.com` | `football1` |
-| User | `stefan_g` | `stefan@example.com` | `football1` |
-| User | `teodora_v` | `teodora@example.com` | `football1` |
-| User | `filip_a` | `filip@example.com` | `football1` |
+| Role  | Username  | Email               | Password    |
+| ----- | --------- | ------------------- | ----------- |
+| Admin | `admin`   | `admin@example.com` | `admin1234` |
+| User  | `marko_p` | `marko@example.com` | `football1` |
+| User  | `sara_b`  | `sara@example.com`  | `football1` |
+| User  | `ivan_t`  | `ivan@example.com`  | `football1` |
+| User  | `elena_k` | `elena@example.com` | `football1` |
+| User  | `david_m` | `david@example.com` | `football1` |
+| User  | `ana_s`   | `ana@example.com`   | `football1` |
 
 `marko_p` is the best account to start with: he organizes the upcoming "Football in Skopje" game, which has players on Team A, on Team B and unassigned, two pending join requests and a chat. He also has finished games in several months, so his My games page shows the chart.
 
-The seed also creates 36 games: finished ones spread over the last five months (so both charts have something to show, for every user), one in progress, and upcoming ones (one of them full, one too far ahead for a weather forecast), with join requests in all three states and chat messages. The game times are counted from the moment of seeding, so there is always a game in progress, whenever the seed is run. Seeding again deletes everything first, so it always gives the same data.
+The seed also creates 12 games: finished ones, one in progress, and upcoming ones (one of them full, one too far ahead for a weather forecast), with join requests in all three states and chat messages. The game times are counted from the moment of seeding, so there is always a game in progress, whenever the seed is run. Seeding again deletes everything first, so it always gives the same data.
 
 ## The three types of users
 
@@ -163,41 +156,3 @@ The REST API is documented with JSDoc comments above the routes (in `backend/src
 - OpenAPI file: `/api/swagger.json`
 
 To call a protected route from Swagger UI: call `POST /api/auth/login` with a demo login, copy the `token` from the answer, press **Authorize** at the top of the page and paste it.
-
-## How the app meets the assignment
-
-| Requirement | Where it is |
-|---|---|
-| Static screen mock-ups (part 1) | `docs/mockups/`, with a description of every screen in `docs/mockups/README.md` |
-| Login and registration screens | Login, Register |
-| Adding an element | Create game |
-| List of elements and a detailed view | Home, Game page |
-| Deleting an element | "Cancel game" on the Game page, with a confirmation popup |
-| Viewing and editing an element | Edit game |
-| Search | The sport, city and date filters on Home |
-| External source | The Open-Meteo forecast on the Game page |
-| MVC | `backend/src/models`, `controllers`, `routes` (plus `middleware`); the React app is the view |
-| Five collections, at least two dependent | users, games, joinRequests, players, messages. A game depends on its organizer; a join request, a player and a message each depend on a user and a game |
-| `/db` page | Delete all data, Seed initial data |
-| REST methods and status codes | GET, POST, PUT and DELETE; 200, 201, 204, 400, 401, 403, 404, 409. Every error is JSON with a readable `msg` |
-| Validation on three levels | Mongoose schemas (`backend/src/models`), `express-validator` rules before the controllers (`backend/src/middleware/*.validation.js`), and the forms in the browser (regular expressions, and select inputs for every closed set) |
-| At least two extra npm packages | `bcryptjs` (password hashing), `jsonwebtoken` (login tokens), `nodemailer` (emails), `express-validator`, `http-status-codes`, `swagger-jsdoc`, `swagger-ui-express` |
-| JWT and three types of users | Guest, user and admin, as described above |
-| Routing in its own module | `frontend/src/AppRoutes.jsx`, apart from `App.jsx` |
-| Classes that mirror the documents | `User`, `Game`, `JoinRequest`, `Player`, `Message` in `frontend/src/models/` |
-| Two services | `frontend/src/services/api.js` (our REST API) and `weather.js` (Open-Meteo) |
-| Reused components | `Navigation`, `Footer`, `GameForm` (create and edit), `GameCard`, `Teams`, `Chat`, `BarChart` |
-| One popup component | `Modal.jsx`; every confirmation in the app uses it |
-| Charts | Games per sport on Home, My games per month on My games |
-| Other features | Email notifications, drag-and-drop teams, a history view (My games), chat between players |
-
-## Browsers
-
-The app was checked in these browsers:
-
-| Browser | Version | Result |
-|---|---|---|
-| Google Chrome | 154 | works, no layout problems |
-| Microsoft Edge | 155 | works, looks the same as in Chrome |
-
-The date field on the home page and the date and time field of the game form are the browser's own controls, so their look (the placeholder text and the calendar popup) is the browser's and differs a little from one browser to another.
