@@ -42,6 +42,20 @@ class Game {
     return this.organizer ? this.organizer.username : "deleted user";
   }
 
+  // user is the logged-in User, or null for a guest
+  isOrganizedBy(user) {
+    if (!user || !this.organizer) return false;
+    return this.organizer._id === user._id;
+  }
+
+  // Who gets the Edit and Cancel buttons: the organizer until the game
+  // starts, an admin always. The server checks the same rule again.
+  canBeChangedBy(user) {
+    if (!user) return false;
+    if (user.isAdmin()) return true;
+    return this.isOrganizedBy(user) && this.status === "upcoming";
+  }
+
   placesLeft() {
     return this.maxPlayers - this.playerCount;
   }

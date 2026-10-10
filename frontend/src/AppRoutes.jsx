@@ -4,6 +4,7 @@ import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import Database from "./pages/Database.jsx";
 import CreateGame from "./pages/CreateGame.jsx";
+import EditGame from "./pages/EditGame.jsx";
 import GamePage from "./pages/GamePage.jsx";
 import NotFound from "./pages/NotFound.jsx";
 
@@ -30,7 +31,13 @@ const AppRoutes = ({ user, onLogin, onLogout }) => {
         path="/games/new"
         element={user ? <CreateGame /> : <Navigate to="/login" replace />}
       />
-      <Route path="/games/:id" element={<GamePage />} />
+      <Route
+        path="/games/:id/edit"
+        element={
+          user ? <EditGame user={user} /> : <Navigate to="/login" replace />
+        }
+      />
+      <Route path="/games/:id" element={<GamePage user={user} />} />
       {/* Open to everyone: after "delete all" there is no admin to log in as */}
       <Route path="/db" element={<Database onLogout={onLogout} />} />
       {/* "*" catches every address that no other route matched */}

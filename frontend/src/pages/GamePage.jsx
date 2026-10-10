@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
-import { fetchGame } from "../services/api.js";
+import { Link, useParams, useNavigate } from "react-router-dom";
+import Modal from "../components/Modal.jsx";
+import { fetchGame, deleteGame } from "../services/api.js";
 import { formatTime, formatPlaces } from "../services/helpers.js";
 
 // How each status is shown: its text and the Bootstrap colour of its badge
@@ -21,15 +22,22 @@ const formatDateTime = (date) => {
   return `${day}, ${formatTime(date)}`;
 };
 
-const GamePage = () => {
+// user is the logged-in user, or null for a guest
+const GamePage = ({ user }) => {
   // The id is the ":id" part of the address /games/:id
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const [game, setGame] = useState(null);
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
   // Empty when the game loaded; otherwise what to tell the user
   const [loadError, setLoadError] = useState("");
+  // Whether the "Cancel this game?" popup is open
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
+  const [cancelError, setCancelError] = useState("");
+  // True while the cancel request is on its way, so it cannot be sent twice
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     const getGame = async () => {
@@ -60,6 +68,23 @@ const GamePage = () => {
     // to another's loads the other game
   }, [id]);
 
+  const handleCancelGame = async () => {
+    setConfirmingCancel(false);
+    setCancelError("");
+    setCancelling(true);
+
+    try {
+      await deleteGame(id);
+      // The game no longer exists, so there is nothing left to show here
+      navigate("/");
+    } catch (error) {
+      console.error("Error cancelling the game:", error);
+      const data = error.response ? error.response.data : null;
+      setCancelError(data ? data.msg : "The server could not be reached");
+      setCancelling(false);
+    }
+  };
+
   if (loading) return <p className="text-center py-5">Loading...</p>;
 
   if (loadError) {
@@ -83,15 +108,34 @@ const GamePage = () => {
 
   return (
     <div className="container py-4">
-      <div className="mb-4">
-        <h1 className="h2 mb-1">
-          {game.sport} in {game.city}{" "}
-          <span className={`badge text-bg-${badge.variant} fs-6 align-middle`}>
-            {badge.label}
-          </span>
-        </h1>
-        <p className="text-muted mb-0">Organizer: {game.organizerName()}</p>
+      <div className="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-4">
+        <div>
+          <h1 className="h2 mb-1">
+            {game.sport} in {game.city}{" "}
+            <span className={`badge text-bg-${badge.variant} fs-6 align-middle`}>
+              {badge.label}
+            </span>
+          </h1>
+          <p className="text-muted mb-0">Organizer: {game.organizerName()}</p>
+        </div>
+        {game.canBeChangedBy(user) && (
+          <div className="d-flex gap-2">
+            <Link className="btn btn-outline-primary" to={`/games/${id}/edit`}>
+              Edit game
+            </Link>
+            <button
+              className="btn btn-outline-danger"
+              type="button"
+              disabled={cancelling}
+              onClick={() => setConfirmingCancel(true)}
+            >
+              Cancel game
+            </button>
+          </div>
+        )}
       </div>
+
+      {cancelError && <div className="alert alert-danger">{cancelError}</div>}
 
       <div className="row g-4">
         <div className="col-12 col-md-7">
@@ -146,6 +190,18 @@ const GamePage = () => {
           </div>
         </div>
       </div>
+
+      {confirmingCancel && (
+        <Modal
+          title="Cancel this game?"
+          text={`${game.sport} in ${game.city} on ${formatDateTime(game.startTime)} will be deleted together with its join requests, players and chat messages. This cannot be undone.`}
+          confirmLabel="Cancel game"
+          cancelLabel="Keep game"
+          confirmVariant="danger"
+          onConfirm={handleCancelGame}
+          onClose={() => setConfirmingCancel(false)}
+        />
+      )}
     </div>
   );
 };

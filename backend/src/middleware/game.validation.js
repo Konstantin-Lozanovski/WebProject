@@ -40,7 +40,8 @@ export const gameSearchRules = [
     .isDate({ format: "YYYY-MM-DD", strictMode: true }),
 ];
 
-export const gameRules = [
+// The rules that are the same for a new game and for an edit
+const gameFieldRules = [
   body("sport", "Sport must be one of the listed sports")
     .isString()
     .bail()
@@ -54,15 +55,6 @@ export const gameRules = [
     .bail()
     .trim()
     .isLength({ min: VENUE_MIN_LENGTH, max: VENUE_MAX_LENGTH }),
-  // toDate turns the text into a Date, which is what isStartTimeAllowed expects
-  body(
-    "startTime",
-    "Start time must be at least 2 hours and at most 60 days from now",
-  )
-    .isISO8601()
-    .bail()
-    .toDate()
-    .custom(isStartTimeAllowed),
   body("duration", "Duration must be 60, 90 or 120 minutes")
     .isIn(DURATIONS)
     .bail()
@@ -79,4 +71,29 @@ export const gameRules = [
     .bail()
     .trim()
     .isLength({ max: NOTES_MAX_LENGTH }),
+];
+
+export const gameRules = [
+  ...gameFieldRules,
+  // toDate turns the text into a Date, which is what isStartTimeAllowed expects
+  body(
+    "startTime",
+    "Start time must be at least 2 hours and at most 60 days from now",
+  )
+    .isISO8601()
+    .bail()
+    .toDate()
+    .custom(isStartTimeAllowed),
+];
+
+// An edit sends every field again, the start time too. A start time that
+// was not changed may be closer than 2 hours by now, or in the past when an
+// admin edits a finished game, so here it only has to be a real date. The
+// schema checks the 2 hours and 60 days when the start time is changed.
+export const gameEditRules = [
+  ...gameFieldRules,
+  body("startTime", "Start time must be a date and time")
+    .isISO8601()
+    .bail()
+    .toDate(),
 ];

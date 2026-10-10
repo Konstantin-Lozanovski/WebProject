@@ -14,6 +14,9 @@ let server;
 let baseUrl;
 let markoToken;
 let saraToken;
+// The organizer of the games that the edit and cancel tests change
+let petarToken;
+let adminToken;
 
 before(async () => {
   await mongoose.connect(TEST_MONGO_URI);
@@ -28,6 +31,13 @@ before(async () => {
 
   markoToken = await registerUser("marko_7", "marko@example.com");
   saraToken = await registerUser("sara_b", "sara@example.com");
+  petarToken = await registerUser("petar_v", "petar@example.com");
+
+  // Nobody can register as an admin, so the role is set in the database
+  adminToken = await registerUser("the_admin", "admin@example.com");
+  await mongoose.connection
+    .collection("users")
+    .updateOne({ username: "the_admin" }, { $set: { role: "admin" } });
 
   await createSearchGames();
 });
@@ -52,6 +62,24 @@ const post = (path, body, token) => {
 
 const get = (path) => {
   return fetch(`${baseUrl}${path}`);
+};
+
+const put = (path, body, token) => {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  return fetch(`${baseUrl}${path}`, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify(body),
+  });
+};
+
+const del = (path, token) => {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  return fetch(`${baseUrl}${path}`, { method: "DELETE", headers });
 };
 
 const registerUser = async (username, email) => {
@@ -79,6 +107,37 @@ const validGame = (changes) => {
     notes: "Bring a white and a dark shirt.",
     ...changes,
   };
+};
+
+// Creates a game through the API and returns it as the API answered
+const createGameAs = async (token, changes) => {
+  const response = await post("/api/games", validGame(changes), token);
+  assert.equal(response.status, 201);
+  return (await response.json()).game;
+};
+
+// The API refuses a start in the past, so a game that already started can
+// only be made by moving its start in the database
+const moveStartTime = async (game, startTime) => {
+  await mongoose.connection
+    .collection("games")
+    .updateOne(
+      { _id: new mongoose.Types.ObjectId(game._id) },
+      { $set: { startTime: new Date(startTime) } },
+    );
+};
+
+// Join requests are not built yet, so a second player can only get into a
+// game by being written to the database
+const addPlayer = async (game, username) => {
+  const user = await mongoose.connection.collection("users").findOne({ username });
+  await mongoose.connection.collection("players").insertOne({
+    user: user._id,
+    game: new mongoose.Types.ObjectId(game._id),
+    team: "unassigned",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
 };
 
 // "2026-11-19": the calendar day that is this many days from now
@@ -390,6 +449,316 @@ test("a game that does not exist returns 404, and an id that is not an id return
   assert.equal(missing.status, 404);
   assert.equal(body.msg, "Game not found");
   assert.equal(notAnId.status, 400);
+});
+
+test("the organizer edits every detail of their upcoming game", async () => {
+  const game = await createGameAs(petarToken, { startTime: fromNow(12 * DAY) });
+  const newStartTime = fromNow(13 * DAY);
+
+  const response = await put(
+    `/api/games/${game._id}`,
+    {
+      sport: "Basketball",
+      city: "Ohrid",
+      venue: "  Court by the lake  ",
+      startTime: newStartTime,
+      duration: 60,
+      maxPlayers: 6,
+      notes: "Changed plans.",
+    },
+    petarToken,
+  );
+  const body = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(body.game.organizer.username, "petar_v");
+  assert.equal(body.game.playerCount, 1);
+
+  const gamePage = await get(`/api/games/${game._id}`);
+  const saved = (await gamePage.json()).game;
+
+  assert.equal(saved.sport, "Basketball");
+  assert.equal(saved.city, "Ohrid");
+  assert.equal(saved.venue, "Court by the lake");
+  assert.equal(saved.startTime, newStartTime);
+  assert.equal(saved.duration, 60);
+  assert.equal(saved.maxPlayers, 6);
+  assert.equal(saved.notes, "Changed plans.");
+});
+
+test("only the organizer or an admin can edit a game: another user gets 403 and a guest gets 401", async () => {
+  const game = await createGameAs(petarToken, { startTime: fromNow(15 * DAY) });
+  const changes = validGame({ startTime: game.startTime, venue: "Changed venue" });
+
+  const asGuest = await put(`/api/games/${game._id}`, changes);
+  const asOtherUser = await put(`/api/games/${game._id}`, changes, saraToken);
+  const asAdmin = await put(`/api/games/${game._id}`, changes, adminToken);
+
+  assert.equal(asGuest.status, 401);
+  assert.equal(asOtherUser.status, 403);
+  assert.equal(asAdmin.status, 200);
+
+  // The admin's edit did not make the admin the organizer
+  assert.equal((await asAdmin.json()).game.organizer.username, "petar_v");
+});
+
+test("editing a game that does not exist returns 404", async () => {
+  const response = await put(
+    "/api/games/66f1c0a4e3b2a1d4c5f6a7b8",
+    validGame(),
+    petarToken,
+  );
+
+  assert.equal(response.status, 404);
+});
+
+test("the organizer cannot edit a game that has started, but an admin can edit it at any status", async () => {
+  const inProgress = await createGameAs(petarToken, { startTime: fromNow(17 * DAY) });
+  const finished = await createGameAs(petarToken, { startTime: fromNow(19 * DAY) });
+  const startedHalfAnHourAgo = fromNow(-0.5 * HOUR);
+  const startedThreeDaysAgo = fromNow(-3 * DAY);
+  await moveStartTime(inProgress, startedHalfAnHourAgo);
+  await moveStartTime(finished, startedThreeDaysAgo);
+
+  // Only the notes change; the start time is sent back as it was
+  const inProgressChanges = validGame({ startTime: startedHalfAnHourAgo, notes: "Fixed." });
+  const finishedChanges = validGame({ startTime: startedThreeDaysAgo, notes: "Fixed." });
+
+  const organizerInProgress = await put(`/api/games/${inProgress._id}`, inProgressChanges, petarToken);
+  const organizerFinished = await put(`/api/games/${finished._id}`, finishedChanges, petarToken);
+  const body = await organizerInProgress.json();
+
+  assert.equal(organizerInProgress.status, 409);
+  assert.equal(organizerFinished.status, 409);
+  assert.match(body.msg, /already started/);
+
+  const adminInProgress = await put(`/api/games/${inProgress._id}`, inProgressChanges, adminToken);
+  const adminFinished = await put(`/api/games/${finished._id}`, finishedChanges, adminToken);
+
+  assert.equal(adminInProgress.status, 200);
+  assert.equal(adminFinished.status, 200);
+  assert.equal((await adminFinished.json()).game.notes, "Fixed.");
+});
+
+test("an edit follows the same field rules as creating a game", async () => {
+  const game = await createGameAs(petarToken, { startTime: fromNow(21 * DAY) });
+
+  const closedSets = await put(
+    `/api/games/${game._id}`,
+    validGame({ startTime: game.startTime, sport: "chess", city: "Paris", duration: 75, maxPlayers: 7 }),
+    petarToken,
+  );
+  const texts = await put(
+    `/api/games/${game._id}`,
+    validGame({ startTime: game.startTime, venue: "ab", notes: "a".repeat(301) }),
+    petarToken,
+  );
+  const empty = await put(`/api/games/${game._id}`, {}, petarToken);
+
+  assert.equal(closedSets.status, 400);
+  assert.deepEqual(Object.keys((await closedSets.json()).fields).sort(), [
+    "city",
+    "duration",
+    "maxPlayers",
+    "sport",
+  ]);
+  assert.equal(texts.status, 400);
+  assert.deepEqual(Object.keys((await texts.json()).fields).sort(), ["notes", "venue"]);
+  assert.equal(empty.status, 400);
+  assert.deepEqual(Object.keys((await empty.json()).fields).sort(), [
+    "city",
+    "duration",
+    "maxPlayers",
+    "sport",
+    "startTime",
+    "venue",
+  ]);
+});
+
+test("a start time changed to less than 2 hours or more than 60 days from now is refused, for an admin too", async () => {
+  const game = await createGameAs(petarToken, { startTime: fromNow(23 * DAY) });
+
+  const tooSoon = await put(
+    `/api/games/${game._id}`,
+    validGame({ startTime: fromNow(1 * HOUR) }),
+    petarToken,
+  );
+  const tooFar = await put(
+    `/api/games/${game._id}`,
+    validGame({ startTime: fromNow(61 * DAY) }),
+    adminToken,
+  );
+  const notADate = await put(
+    `/api/games/${game._id}`,
+    validGame({ startTime: "tomorrow" }),
+    petarToken,
+  );
+  const body = await tooSoon.json();
+
+  assert.equal(tooSoon.status, 400);
+  assert.equal(
+    body.fields.startTime,
+    "Start time must be at least 2 hours and at most 60 days from now",
+  );
+  assert.equal(tooFar.status, 400);
+  assert.equal(notADate.status, 400);
+
+  // Nothing of the refused edits was saved
+  const gamePage = await get(`/api/games/${game._id}`);
+  assert.equal((await gamePage.json()).game.startTime, game.startTime);
+});
+
+test("lowering the max below the current number of players returns 409 with a clear message", async () => {
+  const game = await createGameAs(petarToken, { startTime: fromNow(25 * DAY), maxPlayers: 10 });
+  await addPlayer(game, "sara_b");
+  await addPlayer(game, "nina_k");
+  const changes = (maxPlayers) => validGame({ startTime: game.startTime, maxPlayers });
+
+  const belowCount = await put(`/api/games/${game._id}`, changes(2), petarToken);
+  const body = await belowCount.json();
+  const asAdmin = await put(`/api/games/${game._id}`, changes(2), adminToken);
+
+  assert.equal(belowCount.status, 409);
+  assert.equal(body.msg, "This game has 3 players, so the max cannot be lower than that");
+  assert.equal(asAdmin.status, 409);
+
+  // 4 is the lowest even number that still holds the 3 players
+  const enough = await put(`/api/games/${game._id}`, changes(4), petarToken);
+  assert.equal(enough.status, 200);
+  assert.equal((await enough.json()).game.playerCount, 3);
+});
+
+test("moving a game onto another game of one of its players returns 409 and names the player", async () => {
+  const start = Date.now() + 27 * DAY;
+  const game = await createGameAs(petarToken, {
+    startTime: new Date(start).toISOString(),
+    duration: 60,
+  });
+  await addPlayer(game, "sara_b");
+  // Sara's own game starts 3 hours after this one
+  await createGameAs(saraToken, {
+    startTime: new Date(start + 3 * HOUR).toISOString(),
+    duration: 60,
+    sport: "Tennis",
+    city: "Ohrid",
+  });
+
+  const movedOnto = await put(
+    `/api/games/${game._id}`,
+    validGame({ startTime: new Date(start + 2.5 * HOUR).toISOString(), duration: 60 }),
+    petarToken,
+  );
+  const body = await movedOnto.json();
+
+  assert.equal(movedOnto.status, 409);
+  assert.equal(
+    body.msg,
+    "This change makes the game overlap another game sara_b is a player in (Tennis in Ohrid)",
+  );
+
+  // Two hours later it ends exactly when Sara's game starts, which is allowed
+  const backToBack = await put(
+    `/api/games/${game._id}`,
+    validGame({ startTime: new Date(start + 2 * HOUR).toISOString(), duration: 60 }),
+    petarToken,
+  );
+  assert.equal(backToBack.status, 200);
+
+  // The time stays, but a longer duration runs into Sara's game
+  const longer = await put(
+    `/api/games/${game._id}`,
+    validGame({ startTime: new Date(start + 2 * HOUR).toISOString(), duration: 90 }),
+    adminToken,
+  );
+  assert.equal(longer.status, 409);
+});
+
+test("a game does not overlap itself: a small move of the start time is allowed", async () => {
+  const start = Date.now() + 29 * DAY;
+  const game = await createGameAs(petarToken, { startTime: new Date(start).toISOString() });
+
+  const response = await put(
+    `/api/games/${game._id}`,
+    validGame({ startTime: new Date(start + 0.5 * HOUR).toISOString() }),
+    petarToken,
+  );
+
+  assert.equal(response.status, 200);
+});
+
+test("the organizer cancels their game: it is gone from the list and from its own address, with its players", async () => {
+  const startTime = fromNow(31 * DAY);
+  const game = await createGameAs(petarToken, { startTime, city: "Kumanovo" });
+  await addPlayer(game, "sara_b");
+
+  const response = await del(`/api/games/${game._id}`, petarToken);
+
+  assert.equal(response.status, 204);
+  assert.equal(await response.text(), "");
+
+  const gamePage = await get(`/api/games/${game._id}`);
+  const list = await get("/api/games?city=Kumanovo");
+
+  assert.equal(gamePage.status, 404);
+  assert.deepEqual((await list.json()).games, []);
+
+  // No route can show the players of a game that is gone, so the test
+  // looks in the database
+  const playersLeft = await mongoose.connection
+    .collection("players")
+    .countDocuments({ game: new mongoose.Types.ObjectId(game._id) });
+  assert.equal(playersLeft, 0);
+
+  // The time is free again for the organizer
+  await createGameAs(petarToken, { startTime });
+});
+
+test("only the organizer or an admin can cancel a game: another user gets 403 and a guest gets 401", async () => {
+  const game = await createGameAs(petarToken, { startTime: fromNow(33 * DAY) });
+
+  const asGuest = await del(`/api/games/${game._id}`);
+  const asOtherUser = await del(`/api/games/${game._id}`, saraToken);
+
+  assert.equal(asGuest.status, 401);
+  assert.equal(asOtherUser.status, 403);
+  assert.equal((await get(`/api/games/${game._id}`)).status, 200);
+
+  const asAdmin = await del(`/api/games/${game._id}`, adminToken);
+  const again = await del(`/api/games/${game._id}`, adminToken);
+
+  assert.equal(asAdmin.status, 204);
+  assert.equal(again.status, 404);
+});
+
+test("the organizer cannot cancel a game that has started, but an admin can delete it at any status", async () => {
+  const inProgress = await createGameAs(petarToken, { startTime: fromNow(35 * DAY) });
+  const finished = await createGameAs(petarToken, { startTime: fromNow(37 * DAY) });
+  await moveStartTime(inProgress, fromNow(-0.5 * HOUR));
+  await moveStartTime(finished, fromNow(-3 * DAY));
+
+  const organizerInProgress = await del(`/api/games/${inProgress._id}`, petarToken);
+  const organizerFinished = await del(`/api/games/${finished._id}`, petarToken);
+  const body = await organizerInProgress.json();
+
+  assert.equal(organizerInProgress.status, 409);
+  assert.equal(organizerFinished.status, 409);
+  assert.match(body.msg, /already started/);
+
+  const adminInProgress = await del(`/api/games/${inProgress._id}`, adminToken);
+  const adminFinished = await del(`/api/games/${finished._id}`, adminToken);
+
+  assert.equal(adminInProgress.status, 204);
+  assert.equal(adminFinished.status, 204);
+});
+
+test("the edit and delete routes are in the OpenAPI file", async () => {
+  const response = await get("/api/swagger.json");
+  const body = await response.json();
+
+  assert.ok(body.paths["/api/games/{id}"].put);
+  assert.ok(body.paths["/api/games/{id}"].delete);
+  assert.ok(body.paths["/api/games/{id}"].put.responses["409"]);
+  assert.ok(body.paths["/api/games/{id}"].delete.responses["204"]);
 });
 
 test("the three game routes are in the OpenAPI file", async () => {

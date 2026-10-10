@@ -1,6 +1,14 @@
 import { StatusCodes } from "http-status-codes";
-import { NotFoundError, ConflictError } from "../errors/index.js";
-import Game, { getStatus, findOverlappingGame } from "../models/game.model.js";
+import {
+  NotFoundError,
+  ConflictError,
+  ForbiddenError,
+} from "../errors/index.js";
+import Game, {
+  getStatus,
+  findOverlappingGame,
+  deleteGameWithItsDocuments,
+} from "../models/game.model.js";
 import Player from "../models/player.model.js";
 
 // Every city of the app is in Macedonia, so "a day" always means a day there,
@@ -81,6 +89,36 @@ const countPlayersByGame = async (games) => {
     counts[player.game] = (counts[player.game] || 0) + 1;
   }
   return counts;
+};
+
+// Throws unless the user may edit or cancel the game: its organizer until
+// it starts, or an admin at any time
+const checkCanChangeGame = (game, user) => {
+  if (user.role === "admin") return;
+
+  // equals compares two ids by value; === would compare the objects
+  if (!game.organizer.equals(user._id))
+    throw new ForbiddenError("Only the organizer can change this game");
+
+  if (getStatus(game) !== "upcoming")
+    throw new ConflictError(
+      "This game has already started, so it can no longer be changed",
+    );
+};
+
+// Throws when the game, with its new time, overlaps another game of any of
+// its players. The user of every player must be populated.
+const checkNoPlayerOverlaps = async (game, players) => {
+  for (const player of players) {
+    // The user is missing when their account was deleted
+    if (!player.user) continue;
+
+    const overlappingGame = await findOverlappingGame(player.user._id, game);
+    if (overlappingGame)
+      throw new ConflictError(
+        `This change makes the game overlap another game ${player.user.username} is a player in (${overlappingGame.sport} in ${overlappingGame.city})`,
+      );
+  }
 };
 
 // GET /api/games
@@ -170,4 +208,57 @@ export const createGame = async (req, res) => {
   await game.populate("organizer", "username");
 
   res.status(StatusCodes.CREATED).json({ game: toPublicGame(game, 1) });
+};
+
+// PUT /api/games/:id
+export const updateGame = async (req, res) => {
+  const { sport, city, venue, startTime, duration, maxPlayers, notes } = req.body;
+
+  const game = await Game.findById(req.params.id);
+  if (!game) throw new NotFoundError("Game not found");
+  checkCanChangeGame(game, req.user);
+
+  // The organizer is not in this list, so an edit can never change whose
+  // game it is
+  game.set({ sport, city, venue, startTime, duration, maxPlayers, notes });
+
+  // "At least 2 hours from now" is a rule for a start time that is being
+  // chosen. One that stays as it was may be closer than that by now, or in
+  // the past when an admin edits a finished game, so it is not checked
+  // again. Every other rule of the schema is.
+  const pathsToSkip = game.isModified("startTime") ? [] : ["startTime"];
+  await game.validate({ pathsToSkip });
+
+  const players = await Player.find({ game: game._id }).populate(
+    "user",
+    "username",
+  );
+  if (maxPlayers < players.length)
+    throw new ConflictError(
+      `This game has ${players.length} players, so the max cannot be lower than that`,
+    );
+
+  // With the same start time and duration nothing new can overlap
+  if (game.isModified("startTime") || game.isModified("duration")) {
+    await checkNoPlayerOverlaps(game, players);
+  }
+
+  // Already validated just above
+  await game.save({ validateBeforeSave: false });
+
+  await game.populate("organizer", "username");
+
+  res.status(StatusCodes.OK).json({ game: toPublicGame(game, players.length) });
+};
+
+// DELETE /api/games/:id
+// For the organizer this is cancelling the game; for an admin, deleting it
+export const deleteGame = async (req, res) => {
+  const game = await Game.findById(req.params.id);
+  if (!game) throw new NotFoundError("Game not found");
+  checkCanChangeGame(game, req.user);
+
+  await deleteGameWithItsDocuments(game);
+
+  res.status(StatusCodes.NO_CONTENT).send();
 };

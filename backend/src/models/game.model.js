@@ -130,10 +130,25 @@ export const findOverlappingGame = async (userId, game) => {
   for (const player of players) {
     // populate leaves null when the player's game no longer exists
     if (!player.game) continue;
+    // When a game is edited the user is already a player in it, and its
+    // old time would always overlap its new one
+    if (player.game._id.equals(game._id)) continue;
     if (gamesOverlap(game, player.game)) return player.game;
   }
 
   return null;
 };
 
-export default mongoose.model("Game", gameSchema);
+const Game = mongoose.model("Game", gameSchema);
+
+// How a game that has players is deleted, whoever asks for it (see
+// docs/adr/0001): the game goes together with everything that belongs to it. Each feature
+// that adds a collection belonging to a game adds one line here.
+export const deleteGameWithItsDocuments = async (game) => {
+  // The game goes first: if a later step fails, what is left are players
+  // of a game that no longer exists, and never a game without its players
+  await Game.deleteOne({ _id: game._id });
+  await Player.deleteMany({ game: game._id });
+};
+
+export default Game;

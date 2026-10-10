@@ -71,3 +71,14 @@ export const createGame = async (gameData) => {
   const response = await axiosInstance.post("/games", gameData);
   return new Game(response.data.game);
 };
+
+// PUT /api/games/:id
+export const updateGame = async (gameId, gameData) => {
+  const response = await axiosInstance.put(`/games/${gameId}`, gameData);
+  return new Game(response.data.game);
+};
+
+// DELETE /api/games/:id
+export const deleteGame = async (gameId) => {
+  await axiosInstance.delete(`/games/${gameId}`);
+};
